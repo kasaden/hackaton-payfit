@@ -12,7 +12,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Plus, ExternalLink, Trash2, RefreshCw, Pencil, RotateCw, Bot } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { FileText, Plus, ExternalLink, Trash2, RefreshCw, Pencil, RotateCw, Bot, Search } from "lucide-react";
 import Link from "next/link";
 
 interface Article {
@@ -23,6 +24,7 @@ interface Article {
   published_at: string | null;
   created_at: string;
   word_count: number | null;
+  content_markdown: string | null;
   user_id: string | null;
   trend_id: string | null;
 }
@@ -30,7 +32,17 @@ interface Article {
 export default function ArticlesPage() {
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
   const supabase = createClient();
+
+  const filteredArticles = articles.filter((a) => {
+    if (!search.trim()) return true;
+    const q = search.toLowerCase();
+    return (
+      a.title.toLowerCase().includes(q) ||
+      (a.content_markdown?.toLowerCase().includes(q) ?? false)
+    );
+  });
 
   useEffect(() => {
     fetchArticles();
@@ -111,11 +123,33 @@ export default function ArticlesPage() {
         </Link>
       </div>
 
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+        <Input
+          placeholder="Rechercher dans les titres et contenus..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="pl-10 max-w-md"
+        />
+      </div>
+
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
         {loading ? (
           <div className="p-8 text-center text-gray-500 flex flex-col items-center">
             <RefreshCw className="w-6 h-6 animate-spin mb-2" />
             Chargement des articles...
+          </div>
+        ) : filteredArticles.length === 0 && search.trim() ? (
+          <div className="p-12 text-center">
+            <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+              <Search className="w-6 h-6 text-gray-400" />
+            </div>
+            <h3 className="text-lg font-medium text-[#152330]">
+              Aucun résultat
+            </h3>
+            <p className="text-sm text-gray-500 mt-1">
+              Aucun article ne correspond à &ldquo;{search}&rdquo;
+            </p>
           </div>
         ) : articles.length === 0 ? (
           <div className="p-12 text-center">
@@ -141,13 +175,13 @@ export default function ArticlesPage() {
                 <TableRow>
                   <TableHead className="w-[40%]">Titre</TableHead>
                   <TableHead>Statut</TableHead>
-                  <TableHead>Date de création</TableHead>
+                  <TableHead>Date</TableHead>
                   <TableHead>Mots</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {articles.map((article) => (
+                {filteredArticles.map((article) => (
                   <TableRow key={article.id}>
                     <TableCell className="font-medium">
                       <div className="flex items-center gap-2">
