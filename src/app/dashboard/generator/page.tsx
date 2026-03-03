@@ -25,7 +25,9 @@ import {
   Eye,
   CheckCircle,
   PenTool,
+  ExternalLink,
 } from "lucide-react";
+import Link from "next/link";
 
 interface PromptTemplate {
   id: string;
@@ -385,9 +387,14 @@ function GeneratorContent() {
                       <FileText className="w-4 h-4" />
                       {article.title}
                     </h3>
-                    <p className="text-sm text-gray-500">
-                      Slug : /articles/{article.slug}
-                    </p>
+                    <Link
+                      href={`/articles/${article.slug}`}
+                      target="_blank"
+                      className="text-sm text-[#0066CC] hover:underline inline-flex items-center gap-1"
+                    >
+                      /articles/{article.slug}
+                      <ExternalLink className="w-3 h-3" />
+                    </Link>
                   </div>
                   <Badge
                     variant={
@@ -466,9 +473,14 @@ function GeneratorContent() {
                       <p className="font-semibold text-[#2E7D32] text-sm">
                         Article publié !
                       </p>
-                      <p className="text-xs text-gray-600 mt-1">
-                        /articles/{article.slug}
-                      </p>
+                      <Link
+                        href={`/articles/${article.slug}`}
+                        target="_blank"
+                        className="text-xs text-[#0066CC] hover:underline inline-flex items-center gap-1 mt-1"
+                      >
+                        Voir l&apos;article
+                        <ExternalLink className="w-3 h-3" />
+                      </Link>
                     </div>
                   ) : (
                     <>
