@@ -60,7 +60,7 @@ export default function DashboardOverview() {
       const supabase = createClient();
 
       const [trendsRes, articlesRes, publishedRes, quizRes, hotRes] =
-        await Promise.all([
+        await Promise.allSettled([
           supabase
             .from("trends")
             .select("id", { count: "exact", head: true }),
@@ -78,15 +78,18 @@ export default function DashboardOverview() {
             .eq("lead_category", "hot"),
         ]);
 
+      const quizData =
+        quizRes.status === "fulfilled" ? quizRes.value.data : null;
+
       setStats({
-        trendsCount: trendsRes.count || 0,
-        articlesCount: articlesRes.count || 0,
-        publishedCount: publishedRes.count || 0,
-        quizCount: quizRes.data?.length || 0,
-        hotLeadsCount: hotRes.count || 0,
+        trendsCount: (trendsRes.status === "fulfilled" ? trendsRes.value.count : 0) || 0,
+        articlesCount: (articlesRes.status === "fulfilled" ? articlesRes.value.count : 0) || 0,
+        publishedCount: (publishedRes.status === "fulfilled" ? publishedRes.value.count : 0) || 0,
+        quizCount: quizData?.length || 0,
+        hotLeadsCount: (hotRes.status === "fulfilled" ? hotRes.value.count : 0) || 0,
       });
 
-      setQuizResults(quizRes.data || []);
+      setQuizResults((quizData as QuizResult[]) || []);
       setLoading(false);
     }
 

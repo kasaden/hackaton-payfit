@@ -30,9 +30,16 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { question } = body
 
-    if (!question) {
+    if (!question || typeof question !== 'string') {
       return NextResponse.json(
         { error: 'Missing required field: question' },
+        { status: 400 }
+      )
+    }
+
+    if (question.length > 500) {
+      return NextResponse.json(
+        { error: 'question must be under 500 characters' },
         { status: 400 }
       )
     }

@@ -61,7 +61,7 @@ export default function TrendsPage() {
       .from("trends")
       .select("*")
       .order("score_total", { ascending: false });
-    setTrends((data as Trend[]) || []);
+    setTrends(data ?? []);
     setLoading(false);
   }
 
@@ -76,10 +76,14 @@ export default function TrendsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ question: newQuestion }),
       });
+      if (!res.ok) {
+        const err = await res.json().catch(() => null);
+        throw new Error(err?.error || `Erreur ${res.status}`);
+      }
       const data = await res.json();
       setScoreResult(data);
-    } catch {
-      alert("Erreur lors de l'analyse");
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Erreur lors de l'analyse");
     } finally {
       setScoring(false);
     }

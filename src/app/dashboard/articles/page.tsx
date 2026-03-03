@@ -15,8 +15,18 @@ import { Badge } from "@/components/ui/badge";
 import { FileText, Plus, ExternalLink, Trash2, RefreshCw, Pencil, RotateCw } from "lucide-react";
 import Link from "next/link";
 
+interface Article {
+  id: string;
+  title: string;
+  slug: string;
+  is_published: boolean;
+  published_at: string | null;
+  created_at: string;
+  word_count: number | null;
+}
+
 export default function ArticlesPage() {
-  const [articles, setArticles] = useState<any[]>([]);
+  const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const supabase = createClient();
 

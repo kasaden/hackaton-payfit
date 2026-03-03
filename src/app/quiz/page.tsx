@@ -69,7 +69,7 @@ export default function QuizPage() {
       });
 
       try {
-        await fetch("/api/quiz", {
+        const res = await fetch("/api/quiz", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -80,6 +80,9 @@ export default function QuizPage() {
             company_size,
           }),
         });
+        if (!res.ok) {
+          console.error("Erreur sauvegarde quiz:", res.status);
+        }
       } catch (e) {
         console.error("Erreur sauvegarde quiz:", e);
       }

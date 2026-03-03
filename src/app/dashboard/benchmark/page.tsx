@@ -29,7 +29,7 @@ export default function BenchmarkPage() {
         .from("benchmarks")
         .select("*")
         .order("position", { ascending: true });
-      setBenchmarks((data as Benchmark[]) || []);
+      setBenchmarks(data ?? []);
       setLoading(false);
     }
     fetchData();

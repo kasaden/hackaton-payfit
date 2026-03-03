@@ -39,7 +39,6 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    // On ajoute custom_prompt récupéré depuis le body
     const { keyword_primary, keywords_secondary, icp_target, trend_id, custom_prompt, article_id } = body
 
     if (!keyword_primary || !keywords_secondary || !icp_target) {
@@ -47,6 +46,27 @@ export async function POST(request: NextRequest) {
         { error: 'Missing required fields: keyword_primary, keywords_secondary, icp_target' },
         { status: 400 }
       )
+    }
+
+    // Validation des inputs
+    if (typeof keyword_primary !== 'string' || keyword_primary.length > 200) {
+      return NextResponse.json({ error: 'keyword_primary must be a string under 200 chars' }, { status: 400 })
+    }
+    if (!Array.isArray(keywords_secondary) || keywords_secondary.length > 20) {
+      return NextResponse.json({ error: 'keywords_secondary must be an array of max 20 items' }, { status: 400 })
+    }
+    if (typeof icp_target !== 'string' || !['ICP 1', 'ICP 2', 'ICP 1+2'].includes(icp_target)) {
+      return NextResponse.json({ error: 'icp_target must be "ICP 1", "ICP 2", or "ICP 1+2"' }, { status: 400 })
+    }
+    if (custom_prompt && (typeof custom_prompt !== 'string' || custom_prompt.length > 5000)) {
+      return NextResponse.json({ error: 'custom_prompt must be a string under 5000 chars' }, { status: 400 })
+    }
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    if (article_id && !uuidRegex.test(article_id)) {
+      return NextResponse.json({ error: 'article_id must be a valid UUID' }, { status: 400 })
+    }
+    if (trend_id && !uuidRegex.test(trend_id)) {
+      return NextResponse.json({ error: 'trend_id must be a valid UUID' }, { status: 400 })
     }
 
     const systemPrompt = `Tu es un rédacteur SEO expert en droit social et paie française, travaillant pour PayFit, le leader français de la gestion de paie automatisée pour TPE/PME. Tu rédiges des articles de blog destinés au site payfit.com/fr/fiches-pratiques/.
