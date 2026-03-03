@@ -10,9 +10,6 @@ import {
   Calendar,
   AlertTriangle,
   Heart,
-  Brain,
-  BarChart3,
-  Sparkles,
   ChevronRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -42,8 +39,7 @@ const faqItems = [
       "Oui. La directive européenne 2023/970 s'applique progressivement à toutes les entreprises. Dès 2026, les offres d'emploi doivent mentionner des fourchettes de rémunération, et les salariés peuvent demander des informations sur les écarts salariaux au sein de leur catégorie.",
   },
   {
-    question:
-      "Les salariés en arrêt maladie acquièrent-ils des congés payés ?",
+    question: "Les salariés en arrêt maladie acquièrent-ils des congés payés ?",
     answer:
       "Oui, depuis la loi du 22 avril 2024. Les salariés en arrêt maladie non professionnel acquièrent 2 jours ouvrables de congés par mois d'absence. Cette règle doit être intégrée dans votre logiciel de paie pour éviter les litiges.",
   },
@@ -135,35 +131,6 @@ const painPoints = [
   },
 ];
 
-/* ---------- Features Data ---------- */
-const features = [
-  {
-    icon: Brain,
-    title: "Veille IA automatisée",
-    desc: "Détection en continu des questions RH/paie émergentes. Scoring automatique par pertinence PayFit.",
-    bullets: [
-      "Analyse sémantique des tendances",
-      "Scoring par pertinence",
-      "Alertes automatiques",
-    ],
-    large: true,
-  },
-  {
-    icon: Sparkles,
-    title: "Content Engine",
-    desc: "Génération d'articles SEO conformes en un clic. Grille de compliance intégrée. Optimisé GEO pour les AI Overviews.",
-    bullets: [],
-    large: false,
-  },
-  {
-    icon: BarChart3,
-    title: "Benchmark concurrentiel",
-    desc: "Analysez les stratégies SEO de vos concurrents. Identifiez les opportunités de contenu.",
-    bullets: [],
-    large: false,
-  },
-];
-
 /* ---------- Steps Data ---------- */
 const steps = [
   {
@@ -223,10 +190,10 @@ export default function HomePage() {
                 Enjeux 2026
               </a>
               <a
-                href="#features"
+                href="#how-it-works"
                 className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
               >
-                Fonctionnalités
+                Comment ça marche
               </a>
               <a
                 href="#faq"
@@ -276,9 +243,9 @@ export default function HomePage() {
 
             <AnimatedSection variant="fadeUp" delay={200}>
               <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed mb-10">
-                SMIC, RGDU, transparence salariale, congés maladie&hellip;
-                Les obligations paie évoluent vite. Évaluez votre
-                niveau de conformité en{" "}
+                SMIC, RGDU, transparence salariale, congés maladie&hellip; Les
+                obligations paie évoluent vite. Évaluez votre niveau de
+                conformité en{" "}
                 <strong className="text-gray-900">3 minutes</strong> avec notre
                 quiz expert gratuit.
               </p>
@@ -388,8 +355,7 @@ export default function HomePage() {
               </h2>
               <p className="text-gray-500 max-w-xl mx-auto">
                 Chaque année apporte son lot de modifications. 2026 est
-                particulièrement chargée. Voici les points clés
-                à vérifier.
+                particulièrement chargée. Voici les points clés à vérifier.
               </p>
             </AnimatedSection>
 
@@ -416,74 +382,6 @@ export default function HomePage() {
                 </article>
               ))}
             </FadeInStagger>
-          </div>
-        </section>
-
-        {/* ===== FEATURES BENTO ===== */}
-        <section id="features" className="py-20 md:py-28 bg-[#FAFBFC]">
-          <div className="max-w-6xl mx-auto px-4">
-            <AnimatedSection className="text-center mb-14">
-              <p className="text-sm font-medium text-[#0066CC] mb-3 tracking-wide uppercase">
-                Fonctionnalités
-              </p>
-              <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
-                Un copilote IA pour votre
-                <br className="hidden md:block" /> stratégie contenu paie
-              </h2>
-              <p className="text-gray-500 max-w-xl mx-auto">
-                Détection de tendances, génération
-                d&apos;articles, benchmark concurrentiel &mdash; tout
-                piloté par l&apos;IA.
-              </p>
-            </AnimatedSection>
-
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {features.map((feature, i) => (
-                <AnimatedSection
-                  key={feature.title}
-                  variant="fadeUp"
-                  delay={i * 150}
-                  className={
-                    feature.large ? "lg:col-span-2 lg:row-span-1" : ""
-                  }
-                >
-                  <div
-                    className={`h-full rounded-2xl p-8 border transition-all duration-300 hover:shadow-lg ${
-                      feature.large
-                        ? "bg-gradient-to-br from-[#E6F0FF] to-white border-[#0066CC]/10"
-                        : "bg-white border-gray-100 hover:border-[#0066CC]/20"
-                    }`}
-                  >
-                    <div className="w-12 h-12 rounded-xl bg-[#0066CC]/8 text-[#0066CC] flex items-center justify-center mb-5">
-                      <feature.icon className="w-6 h-6" />
-                    </div>
-                    <h3
-                      className={`font-semibold text-gray-900 mb-3 ${
-                        feature.large ? "text-xl" : "text-lg"
-                      }`}
-                    >
-                      {feature.title}
-                    </h3>
-                    <p className="text-gray-500 text-sm leading-relaxed mb-4">
-                      {feature.desc}
-                    </p>
-                    {feature.bullets.length > 0 && (
-                      <ul className="space-y-2">
-                        {feature.bullets.map((b) => (
-                          <li
-                            key={b}
-                            className="flex items-center gap-2 text-sm text-gray-700"
-                          >
-                            <CheckCircle className="w-4 h-4 text-[#0066CC] shrink-0" />
-                            {b}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                </AnimatedSection>
-              ))}
-            </div>
           </div>
         </section>
 
@@ -523,7 +421,11 @@ export default function HomePage() {
               </FadeInStagger>
             </div>
 
-            <AnimatedSection variant="fadeUp" delay={600} className="text-center mt-12">
+            <AnimatedSection
+              variant="fadeUp"
+              delay={600}
+              className="text-center mt-12"
+            >
               <Link href="/quiz">
                 <Button
                   size="lg"
@@ -570,7 +472,10 @@ export default function HomePage() {
         >
           {/* Decorative */}
           <div className="absolute inset-0 opacity-[0.04]">
-            <div className="absolute inset-0 grid-pattern" style={{ filter: "invert(1)" }} />
+            <div
+              className="absolute inset-0 grid-pattern"
+              style={{ filter: "invert(1)" }}
+            />
           </div>
           <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-white/[0.05] blur-3xl" />
           <div className="absolute -bottom-24 -left-24 w-96 h-96 rounded-full bg-white/[0.05] blur-3xl" />
@@ -582,8 +487,8 @@ export default function HomePage() {
                 <br className="hidden md:block" /> vous surprendre
               </h2>
               <p className="text-lg text-blue-100 mb-10 max-w-xl mx-auto leading-relaxed">
-                Évaluez votre conformité paie en 3 minutes. Gratuit,
-                sans inscription, résultat immédiat.
+                Évaluez votre conformité paie en 3 minutes. Gratuit, sans
+                inscription, résultat immédiat.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link href="/quiz">
@@ -629,8 +534,7 @@ export default function HomePage() {
                   className="rounded"
                 />
                 <span className="font-semibold text-sm">
-                  PayFit{" "}
-                  <span className="text-[#0066CC]">SEO Copilot</span>
+                  PayFit <span className="text-[#0066CC]">SEO Copilot</span>
                 </span>
               </div>
               <p className="text-sm text-gray-500 leading-relaxed">
@@ -669,9 +573,7 @@ export default function HomePage() {
 
             {/* External */}
             <div>
-              <h4 className="font-medium text-sm text-gray-900 mb-3">
-                PayFit
-              </h4>
+              <h4 className="font-medium text-sm text-gray-900 mb-3">PayFit</h4>
               <div className="flex flex-col gap-2">
                 <a
                   href="https://payfit.com"
@@ -695,7 +597,7 @@ export default function HomePage() {
 
           <div className="border-t border-gray-100 pt-8 text-center">
             <p className="text-xs text-gray-400">
-              PayFit SEO Copilot &mdash; Hackathon Eugenia School 2026
+              PayFit SEO Copilot &mdash; ©Equipe13-Eugenia2026
             </p>
           </div>
         </div>

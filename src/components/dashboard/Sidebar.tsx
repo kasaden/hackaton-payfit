@@ -9,6 +9,7 @@ import {
   Sparkles,
   BarChart3,
   PieChart,
+  Presentation,
   LogOut,
 } from "lucide-react";
 import Image from "next/image";
@@ -19,7 +20,16 @@ const navItems = [
   { href: "/dashboard/trends", label: "Tendances", icon: TrendingUp },
   { href: "/dashboard/generator", label: "Générateur", icon: Sparkles },
   { href: "/dashboard/benchmark", label: "Benchmark", icon: BarChart3 },
-  { href: "/dashboard/quiz-analytics", label: "Quiz Analytics", icon: PieChart },
+  {
+    href: "/dashboard/quiz-analytics",
+    label: "Quiz Analytics",
+    icon: PieChart,
+  },
+  {
+    href: "/dashboard/presentation",
+    label: "Présentation",
+    icon: Presentation,
+  },
 ];
 
 export function Sidebar() {
@@ -37,7 +47,13 @@ export function Sidebar() {
       {/* Logo */}
       <div className="p-6">
         <Link href="/" className="flex items-center gap-2">
-          <Image src="/logo-seo-copilot.png" alt="Logo" width={32} height={32} className="rounded-lg" />
+          <Image
+            src="/logo-seo-copilot.png"
+            alt="Logo"
+            width={32}
+            height={32}
+            className="rounded-lg"
+          />
           <div>
             <span className="font-semibold text-sm">PayFit</span>{" "}
             <span className="text-[#0066CC] font-semibold text-sm">
@@ -52,8 +68,7 @@ export function Sidebar() {
         {navItems.map((item) => {
           const isActive =
             pathname === item.href ||
-            (item.href !== "/dashboard" &&
-              pathname.startsWith(item.href));
+            (item.href !== "/dashboard" && pathname.startsWith(item.href));
           return (
             <Link
               key={item.href}
