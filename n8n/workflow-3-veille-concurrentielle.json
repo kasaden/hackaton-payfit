@@ -1,0 +1,304 @@
+{
+  "name": "PayFit SEO Copilot - Veille Concurrentielle",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 12
+            }
+          ]
+        }
+      },
+      "id": "schedule-12h",
+      "name": "Toutes les 12h",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 300]
+    },
+    {
+      "parameters": {},
+      "id": "manual-trigger",
+      "name": "Test Manuel",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 100]
+    },
+    {
+      "parameters": {
+        "jsCode": "// URLs des blogs concurrents à surveiller\nconst competitors = [\n  {\n    name: 'Factorial',\n    blog_url: 'https://factorialhr.fr/blog',\n    rss_url: 'https://factorialhr.fr/blog/feed',\n    strengths: 'SIRH tout-en-un, UX moderne',\n    weaknesses: 'Faible sur le droit social français, contenu souvent traduit de l\\'espagnol'\n  },\n  {\n    name: 'Lucca',\n    blog_url: 'https://www.lucca.fr/magazine',\n    rss_url: 'https://www.lucca.fr/magazine/feed',\n    strengths: 'Contenu RH de qualité, bon SEO existant',\n    weaknesses: 'Cible entreprises 50+, pas spécialisé paie TPE'\n  },\n  {\n    name: 'Cegid',\n    blog_url: 'https://www.cegid.com/fr/blog',\n    rss_url: 'https://www.cegid.com/fr/blog/feed',\n    strengths: 'Large couverture métier, expertise comptable',\n    weaknesses: 'Contenu corporate/générique, pricing opaque'\n  },\n  {\n    name: 'Sage',\n    blog_url: 'https://www.sage.com/fr-fr/blog',\n    rss_url: 'https://www.sage.com/fr-fr/blog/feed',\n    strengths: 'Base installée massive, notoriété',\n    weaknesses: 'Image vieillissante, contenu peu engageant'\n  }\n];\n\nreturn competitors.map(c => ({ json: c }));"
+      },
+      "id": "competitor-list",
+      "name": "Liste Concurrents",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [250, 200]
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "id": "split-competitors",
+      "name": "Par concurrent",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [500, 200]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $json.rss_url }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          },
+          "timeout": 15000
+        }
+      },
+      "id": "fetch-competitor-rss",
+      "name": "Récupérer RSS Concurrent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [750, 200],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parser le RSS du concurrent et construire le body OpenAI\nconst competitor = $('Par concurrent').first().json;\nconst xmlText = $input.first().json.data || $input.first().json.body || '';\n\nlet articlesList = 'Aucun article detecte via RSS';\n\nif (xmlText && typeof xmlText === 'string' && xmlText.length >= 100) {\n  const itemRegex = /<item>(.*?)<\\/item>/gs;\n  const titleRegex = /<title><!\\[CDATA\\[(.*?)\\]\\]><\\/title>|<title>(.*?)<\\/title>/;\n  const dateRegex = /<pubDate>(.*?)<\\/pubDate>/;\n  const items = [];\n  let match;\n  while ((match = itemRegex.exec(xmlText)) !== null) {\n    const block = match[1];\n    const titleMatch = block.match(titleRegex);\n    const dateMatch = block.match(dateRegex);\n    if (titleMatch) {\n      const title = (titleMatch[1] || titleMatch[2] || '').trim();\n      const pubDate = dateMatch ? new Date(dateMatch[1].trim()) : null;\n      const thirtyDaysAgo = new Date();\n      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);\n      if (!pubDate || pubDate >= thirtyDaysAgo) items.push(title);\n    }\n  }\n  const keywords = ['paie','salaire','cotisation','smic','travail','emploi','rh','embauche','licenciement','bulletin','indemnite','prime','teletravail','formation','convention','salarie','employeur','logiciel'];\n  const relevant = items.filter(t => { const l = t.toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g,''); return keywords.some(kw => l.includes(kw)); }).slice(0,10);\n  if (relevant.length > 0) articlesList = relevant.map(t => '- ' + t).join('\\n');\n}\n\n// Construire le body OpenAI avec JSON.stringify (echappe tout correctement)\nconst userPrompt = 'Analyse les articles recents de ' + competitor.name + ' (concurrent de PayFit en paie/RH).\\n\\nForces : ' + (competitor.strengths || '') + '\\nFaiblesses : ' + (competitor.weaknesses || '') + '\\n\\nArticles recents :\\n' + articlesList + '\\n\\nGenere en JSON valide (sans markdown) :\\n{\\n  \"competitor\": \"nom\",\\n  \"content_strategy\": \"resume en 1 phrase de leur strategie contenu\",\\n  \"topics_they_cover\": [\"3-5 sujets principaux couverts\"],\\n  \"content_gaps\": [\\n    {\\n      \"topic\": \"sujet mal couvert ou absent\",\\n      \"opportunity\": \"pourquoi PayFit peut faire mieux\",\\n      \"suggested_keyword\": \"mot-cle cible pour PayFit\",\\n      \"priority\": \"high\" ou \"medium\"\\n    }\\n  ],\\n  \"threats\": [\"sujets ou ce concurrent est fort et ou PayFit doit reagir\"]\\n}';\n\nconst openaiBody = {\n  model: 'gpt-4o-mini',\n  temperature: 0.4,\n  messages: [\n    { role: 'system', content: 'Tu es un analyste SEO concurrentiel pour PayFit. Tu analyses les contenus des concurrents pour identifier des opportunites SEO que PayFit peut exploiter.' },\n    { role: 'user', content: userPrompt }\n  ]\n};\n\nreturn [{ json: { \n  competitor: competitor.name,\n  strengths: competitor.strengths,\n  weaknesses: competitor.weaknesses,\n  openaiBody: openaiBody\n} }];"
+      },
+      "id": "parse-competitor-rss",
+      "name": "Parser Articles Concurrent",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1000, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer VOTRE_CLE_OPENAI"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.openaiBody) }}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "openai-analyze-competitor",
+      "name": "OpenAI - Analyser Concurrent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1250, 200]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parser l'analyse concurrentielle et la formater pour le webhook\nconst competitor = $('Par concurrent').first().json;\nconst response = $input.first().json;\nconst content = response.choices?.[0]?.message?.content || '{}';\nconst cleaned = content.replace(/```json\\n?/g, '').replace(/```\\n?/g, '').trim();\n\nlet analysis;\ntry {\n  analysis = JSON.parse(cleaned);\n} catch {\n  analysis = {\n    competitor: competitor.name,\n    content_strategy: 'Analyse non disponible',\n    topics_they_cover: [],\n    content_gaps: [],\n    threats: []\n  };\n}\n\n// Creer des entrees benchmark pour chaque gap identifie\nconst benchmarkEntries = (analysis.content_gaps || []).map(gap => ({\n  type: 'benchmark',\n  data: {\n    competitor: analysis.competitor,\n    keyword: gap.suggested_keyword || gap.topic,\n    position: null,\n    url: null,\n    content_type: 'content_gap',\n    notes: JSON.stringify({\n      topic: gap.topic,\n      opportunity: gap.opportunity,\n      priority: gap.priority,\n      content_strategy: analysis.content_strategy,\n      threats: analysis.threats\n    })\n  }\n}));\n\n// Creer des trends depuis les content gaps haute priorite\n// IMPORTANT: score_total est GENERATED dans Supabase, ne PAS l'envoyer\nconst trendEntries = (analysis.content_gaps || [])\n  .filter(gap => gap.priority === 'high')\n  .map(gap => ({\n    type: 'trend',\n    data: {\n      question: (gap.suggested_keyword || gap.topic) + ' : guide complet pour TPE/PME 2026',\n      source: 'Veille concurrentielle - ' + analysis.competitor,\n      signal: 'Content gap detecte : ' + (gap.opportunity || 'opportunite identifiee'),\n      score_novelty: 4,\n      score_payfit_relevance: 4,\n      score_volume: 3,\n      icp_target: 'ICP 1+2',\n      suggested_format: 'Article pilier + FAQ',\n      status: 'new'\n    }\n  }));\n\nconst allEntries = [...benchmarkEntries, ...trendEntries];\n\nreturn allEntries.length > 0 \n  ? allEntries.map(e => ({ json: e }))\n  : [{ json: { type: 'benchmark', data: { competitor: analysis.competitor, keyword: 'no-gap-found', notes: 'Aucun gap significatif detecte' } } }];"
+      },
+      "id": "format-analysis",
+      "name": "Formater Résultats",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1500, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://VOTRE-APP.vercel.app/api/webhook-n8n",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Webhook-Secret",
+              "value": "VOTRE_WEBHOOK_SECRET"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "send-to-app",
+      "name": "Envoyer au SaaS",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1750, 200]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "check-success",
+              "leftValue": "={{ $json.success }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-success",
+      "name": "Succès ?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [2000, 200]
+    }
+  ],
+  "connections": {
+    "Test Manuel": {
+      "main": [
+        [
+          {
+            "node": "Liste Concurrents",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Toutes les 12h": {
+      "main": [
+        [
+          {
+            "node": "Liste Concurrents",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Liste Concurrents": {
+      "main": [
+        [
+          {
+            "node": "Par concurrent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Par concurrent": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Récupérer RSS Concurrent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Récupérer RSS Concurrent": {
+      "main": [
+        [
+          {
+            "node": "Parser Articles Concurrent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parser Articles Concurrent": {
+      "main": [
+        [
+          {
+            "node": "OpenAI - Analyser Concurrent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI - Analyser Concurrent": {
+      "main": [
+        [
+          {
+            "node": "Formater Résultats",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Formater Résultats": {
+      "main": [
+        [
+          {
+            "node": "Envoyer au SaaS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Envoyer au SaaS": {
+      "main": [
+        [
+          {
+            "node": "Succès ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Succès ?": {
+      "main": [
+        [
+          {
+            "node": "Par concurrent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Par concurrent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "PayFit SEO Copilot"
+    },
+    {
+      "name": "Veille Concurrentielle"
+    }
+  ]
+}

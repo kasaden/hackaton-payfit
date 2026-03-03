@@ -1,0 +1,606 @@
+{
+  "name": "PayFit SEO Copilot - Veille Optimisée V2",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 6
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger-6h",
+      "name": "Toutes les 6h",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 300]
+    },
+    {
+      "parameters": {},
+      "id": "manual-trigger",
+      "name": "Test Manuel",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 100]
+    },
+    {
+      "parameters": {
+        "jsCode": "// === MOTS-CLÉS DYNAMIQUES ===\n// Combine des seeds statiques + des seeds dynamiques basés sur l'actualité\n\nconst coreSeeds = [\n  'fiche de paie 2026',\n  'obligations employeur paie 2026',\n  'SMIC 2026 nouveautés',\n  'congés payés nouvelles règles 2026',\n  'bulletin de paie mentions obligatoires',\n  'cotisations sociales 2026 changements',\n  'rupture conventionnelle 2026',\n  'télétravail indemnité 2026',\n  'transparence salariale directive européenne',\n  'DSN déclaration 2026',\n  'convention collective paie',\n  'logiciel de paie PME TPE',\n  'SIRH tendances 2026',\n  'égalité salariale femmes hommes 2026',\n  'titre restaurant 2026 plafond'\n];\n\n// Seeds TACTIQUES — sujets à fort potentiel SEO identifiés par le marché\nconst tacticalSeeds = [\n  'LFSS 2026 mesures paie',\n  'prime partage valeur 2026',\n  'index égalité professionnelle 2026',\n  'entretien professionnel obligations 2026',\n  'compte personnel formation CPF 2026',\n  'activité partielle conditions 2026',\n  'allègement charges patronales 2026',\n  'complémentaire santé collective 2026',\n  'registre unique du personnel numérique',\n  'DPAE déclaration préalable embauche 2026'\n];\n\n// Seeds ANTICIPATION — signaux faibles à surveiller\nconst anticipationSeeds = [\n  'intelligence artificielle RH réglementation',\n  'droit à la déconnexion 2026',\n  'semaine 4 jours expérimentation France',\n  'portabilité droits salarié 2026',\n  'déclaration revenus auto-entrepreneur 2026',\n  'médecine du travail réforme 2026',\n  'harcèlement moral obligations employeur 2026',\n  'négociation annuelle obligatoire NAO 2026',\n  'forfait jours cadres nouvelles règles',\n  'RSE reporting social PME 2026'\n];\n\nconst allSeeds = [...coreSeeds, ...tacticalSeeds, ...anticipationSeeds];\n\nreturn [{ \n  json: { \n    seeds: allSeeds.join(', '), \n    seedCount: allSeeds.length,\n    categories: {\n      core: coreSeeds.length,\n      tactical: tacticalSeeds.length,\n      anticipation: anticipationSeeds.length\n    }\n  } \n}];"
+      },
+      "id": "seed-keywords-v2",
+      "name": "Mots-clés Dynamiques",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [250, 200]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://www.legifrance.gouv.fr/rss/jo",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          },
+          "timeout": 15000
+        }
+      },
+      "id": "legifrance-rss",
+      "name": "Légifrance JO RSS",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [500, 500],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse le RSS Légifrance et filtre les items liés à la paie/RH\nconst xmlText = $input.first().json.data || $input.first().json.body || '';\n\nif (!xmlText || typeof xmlText !== 'string' || xmlText.length < 100) {\n  return [{ json: { questions: [], source: 'Légifrance RSS', note: 'RSS indisponible' } }];\n}\n\nconst titleRegex = /<title><!\\[CDATA\\[(.*?)\\]\\]><\\/title>|<title>(.*?)<\\/title>/g;\nconst titles = [];\nlet match;\nwhile ((match = titleRegex.exec(xmlText)) !== null) {\n  const title = (match[1] || match[2] || '').trim();\n  if (title) titles.push(title);\n}\n\nconst keywords = [\n  'paie', 'salaire', 'rémunération', 'cotisation', 'smic',\n  'congé', 'travail', 'emploi', 'sécurité sociale', 'urssaf',\n  'retraite', 'mutuelle', 'prévoyance', 'embauche', 'licenciement',\n  'convention collective', 'code du travail', 'droit social',\n  'bulletin', 'indemnité', 'prime', 'titre-restaurant',\n  'télétravail', 'heures supplémentaires', 'dsn',\n  'formation', 'apprentissage', 'alternance', 'cpf',\n  'harcèlement', 'discrimination', 'égalité', 'handicap',\n  'accident du travail', 'maladie professionnelle', 'arrêt maladie'\n];\n\nconst relevant = titles.filter(t => {\n  const lower = t.toLowerCase();\n  return keywords.some(kw => lower.includes(kw));\n});\n\nconst questions = relevant.slice(0, 10).map(t => ({\n  question: `${t} : quelles conséquences pour la paie des TPE/PME en 2026 ?`,\n  source: 'Légifrance - Journal Officiel',\n  signal: `Publication JO détectée : ${t}`,\n  icp_target: 'ICP 1+2',\n  suggested_format: 'Article technique + FAQ',\n  urgency: 'high'\n}));\n\nreturn [{ json: { questions, count: questions.length } }];"
+      },
+      "id": "parse-legifrance",
+      "name": "Parser RSS Légifrance",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [750, 500]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://bofip.impots.gouv.fr/bofip/rss",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          },
+          "timeout": 15000
+        }
+      },
+      "id": "bofip-rss",
+      "name": "BOFIP RSS (Impôts)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [500, 700],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse le RSS BOFIP (Bulletin Officiel des Finances Publiques)\n// Source critique pour les exonérations, cotisations, avantages fiscaux employeur\nconst xmlText = $input.first().json.data || $input.first().json.body || '';\n\nif (!xmlText || typeof xmlText !== 'string' || xmlText.length < 100) {\n  return [{ json: { questions: [], source: 'BOFIP', note: 'RSS indisponible' } }];\n}\n\nconst titleRegex = /<title><!\\[CDATA\\[(.*?)\\]\\]><\\/title>|<title>(.*?)<\\/title>/g;\nconst titles = [];\nlet match;\nwhile ((match = titleRegex.exec(xmlText)) !== null) {\n  const title = (match[1] || match[2] || '').trim();\n  if (title) titles.push(title);\n}\n\nconst keywords = [\n  'cotisation', 'exonération', 'allègement', 'charges', 'patronal',\n  'salaire', 'rémunération', 'avantage', 'nature', 'titre-restaurant',\n  'prévoyance', 'retraite', 'mutuelle', 'employeur', 'salarié',\n  'social', 'fiscal', 'impôt', 'revenu', 'prélèvement'\n];\n\nconst relevant = titles.filter(t => {\n  const lower = t.toLowerCase();\n  return keywords.some(kw => lower.includes(kw));\n});\n\nconst questions = relevant.slice(0, 5).map(t => ({\n  question: `${t} : impact sur les bulletins de paie 2026 ?`,\n  source: 'BOFIP - Impôts',\n  signal: `Nouvelle doctrine fiscale : ${t}`,\n  icp_target: 'ICP 1+2',\n  suggested_format: 'Article technique',\n  urgency: 'high'\n}));\n\nreturn [{ json: { questions, count: questions.length } }];"
+      },
+      "id": "parse-bofip",
+      "name": "Parser RSS BOFIP",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [750, 700]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://www.urssaf.fr/portail/home/rss.xml",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          },
+          "timeout": 15000
+        }
+      },
+      "id": "urssaf-rss",
+      "name": "URSSAF RSS",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [500, 900],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse le RSS URSSAF — source clé pour les cotisations et déclarations\nconst xmlText = $input.first().json.data || $input.first().json.body || '';\n\nif (!xmlText || typeof xmlText !== 'string' || xmlText.length < 100) {\n  return [{ json: { questions: [], source: 'URSSAF', note: 'RSS indisponible' } }];\n}\n\nconst titleRegex = /<title><!\\[CDATA\\[(.*?)\\]\\]><\\/title>|<title>(.*?)<\\/title>/g;\nconst titles = [];\nlet match;\nwhile ((match = titleRegex.exec(xmlText)) !== null) {\n  const title = (match[1] || match[2] || '').trim();\n  if (title) titles.push(title);\n}\n\n// L'URSSAF est entièrement pertinent, donc on prend tout\nconst questions = titles.slice(0, 8).map(t => ({\n  question: `${t} : ce que les employeurs doivent savoir en 2026`,\n  source: 'URSSAF',\n  signal: `Actualité URSSAF : ${t}`,\n  icp_target: 'ICP 1+2',\n  suggested_format: 'Guide pratique + FAQ',\n  urgency: 'high'\n}));\n\nreturn [{ json: { questions, count: questions.length } }];"
+      },
+      "id": "parse-urssaf",
+      "name": "Parser RSS URSSAF",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [750, 900]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer VOTRE_CLE_OPENAI"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"gpt-4o-mini\",\n  \"temperature\": 0.7,\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"Tu es un expert SEO specialise en droit social, paie et RH francaises. Tu travailles pour PayFit, le leader de la paie en ligne pour TPE/PME. Ta mission CRITIQUE est de detecter les questions emergentes AVANT que la demande explose sur Google. Tu identifies les signaux faibles dans les textes legislatifs, les forums RH, les discussions professionnelles et les changements reglementaires a venir.\\n\\nStrategie de detection avancee :\\n1. ANTICIPATION LEGISLATIVE : Identifie les decrets, arretes et circulaires en cours de publication\\n2. SIGNAUX FAIBLES : Repere les sujets discutes par les experts-comptables et juristes sociaux\\n3. CALENDRIER REGLEMENTAIRE : Considere les echeances connues (DSN, declarations, revalorisations)\\n4. TENDANCES GOOGLE : Identifie les questions People Also Ask emergentes\\n5. OPPORTUNITES SEO : Privilegie les questions avec peu de contenu existant de qualite\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Genere exactement 15 questions emergentes que des dirigeants de TPE/PME ou responsables RH pourraient chercher sur Google dans les 2 prochaines semaines.\\n\\nContexte des mots-cles surveilles : {{ $json.seeds }}\\n\\nRegles STRICTES :\\n- Chaque question DOIT etre liee a une actualite legislative recente, un changement reglementaire imminent, ou une tendance RH emergente de 2026\\n- Privilegie les sujets ou il y a encore PEU de contenu en ligne (opportunite SEO first-mover)\\n- Inclus une estimation de urgence temporelle (le sujet va-t-il exploser dans les jours ou semaines a venir ?)\\n- Differencie ICP 1 (TPE dirigeants, 1-9 salaries) et ICP 2 (PME RH managers, 10-50 salaries)\\n\\nFormat ta reponse UNIQUEMENT en JSON valide (pas de markdown) :\\n\\n[\\n  {\\n    \\\"question\\\": \\\"la question telle que recherchee sur Google\\\",\\n    \\\"source\\\": \\\"source probable (ex: LFSS 2026, Directive UE, URSSAF, Code du travail)\\\",\\n    \\\"signal\\\": \\\"explication en 1 phrase du signal faible detecte\\\",\\n    \\\"icp_target\\\": \\\"ICP 1\\\" ou \\\"ICP 2\\\" ou \\\"ICP 1+2\\\",\\n    \\\"suggested_format\\\": \\\"format recommande\\\",\\n    \\\"urgency\\\": \\\"critical\\\" ou \\\"high\\\" ou \\\"medium\\\" (estimation temporelle)\\n  }\\n]\"\n    }\n  ]\n}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "openai-paa-v2",
+      "name": "OpenAI - Questions PAA Avancées",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [500, 100]
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.first().json;\nconst content = response.choices?.[0]?.message?.content || '[]';\n\nlet questions;\ntry {\n  const cleaned = content.replace(/```json\\n?/g, '').replace(/```\\n?/g, '').trim();\n  questions = JSON.parse(cleaned);\n} catch (e) {\n  const jsonMatch = content.match(/\\[\\s*\\{[\\s\\S]*\\}\\s*\\]/);\n  if (jsonMatch) {\n    questions = JSON.parse(jsonMatch[0]);\n  } else {\n    questions = [];\n  }\n}\n\nreturn [{ json: { questions, count: questions.length, source: 'OpenAI PAA V2' } }];"
+      },
+      "id": "parse-openai-paa",
+      "name": "Parser Réponse PAA",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [750, 100]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer VOTRE_CLE_OPENAI"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"gpt-4o-mini\",\n  \"temperature\": 0.8,\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"Tu es un analyste veille concurrentielle specialise en paie et RH. Tu surveilles les contenus des concurrents de PayFit (Factorial, Lucca, Cegid, Sage, ADP) pour identifier les opportunites de contenu SEO que PayFit devrait couvrir EN PREMIER.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Analyse les tendances SEO en paie/RH en France en mars 2026 et identifie 5 sujets que les concurrents de PayFit (Factorial, Lucca, Cegid) ne couvrent PAS encore ou couvrent mal.\\n\\nPour chaque opportunite, identifie :\\n- La question que les utilisateurs cherchent\\n- Pourquoi PayFit a une opportunite (content gap)\\n- Le concurrent le mieux positionne actuellement\\n- Le meilleur angle pour PayFit\\n\\nFormat JSON valide uniquement :\\n[\\n  {\\n    \\\"question\\\": \\\"question recherchee sur Google\\\",\\n    \\\"source\\\": \\\"Content gap analysis\\\",\\n    \\\"signal\\\": \\\"Aucun concurrent ne couvre ce sujet / Contenu concurrent obsolete ou incomplet\\\",\\n    \\\"icp_target\\\": \\\"ICP cible\\\",\\n    \\\"suggested_format\\\": \\\"format recommande\\\",\\n    \\\"urgency\\\": \\\"high\\\",\\n    \\\"competitor_gap\\\": \\\"description du gap concurrentiel\\\"\\n  }\\n]\"\n    }\n  ]\n}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "openai-content-gap",
+      "name": "OpenAI - Content Gap Analysis",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [500, -100]
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.first().json;\nconst content = response.choices?.[0]?.message?.content || '[]';\n\nlet questions;\ntry {\n  const cleaned = content.replace(/```json\\n?/g, '').replace(/```\\n?/g, '').trim();\n  questions = JSON.parse(cleaned);\n} catch (e) {\n  const jsonMatch = content.match(/\\[\\s*\\{[\\s\\S]*\\}\\s*\\]/);\n  if (jsonMatch) {\n    questions = JSON.parse(jsonMatch[0]);\n  } else {\n    questions = [];\n  }\n}\n\nreturn [{ json: { questions, count: questions.length, source: 'Content Gap Analysis' } }];"
+      },
+      "id": "parse-content-gap",
+      "name": "Parser Content Gap",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [750, -100]
+    },
+    {
+      "parameters": {
+        "jsCode": "// === FUSION MULTI-SOURCE + DEDUPLICATION AVANCÉE ===\nconst items = $input.all();\n\nlet allQuestions = [];\n\nfor (const item of items) {\n  const questions = item.json.questions || [];\n  for (const q of questions) {\n    allQuestions.push({\n      question: q.question,\n      source: q.source || 'Unknown',\n      signal: q.signal || '',\n      icp_target: q.icp_target || 'ICP 1+2',\n      suggested_format: q.suggested_format || 'Article + FAQ',\n      urgency: q.urgency || 'medium',\n      competitor_gap: q.competitor_gap || null\n    });\n  }\n}\n\n// Déduplication avancée — normalisation + Jaccard simplifié\nfunction normalize(text) {\n  return text.toLowerCase()\n    .normalize('NFD').replace(/[\\u0300-\\u036f]/g, '')\n    .replace(/[^a-z0-9\\s]/g, ' ')\n    .replace(/\\s+/g, ' ')\n    .trim();\n}\n\nfunction tokenize(text) {\n  return new Set(normalize(text).split(' ').filter(w => w.length > 2));\n}\n\nfunction jaccard(a, b) {\n  let inter = 0;\n  for (const w of a) { if (b.has(w)) inter++; }\n  const union = a.size + b.size - inter;\n  return union === 0 ? 0 : inter / union;\n}\n\nconst unique = [];\nfor (const q of allQuestions) {\n  const tokQ = tokenize(q.question);\n  let isDup = false;\n  for (const existing of unique) {\n    const tokE = tokenize(existing.question);\n    if (jaccard(tokQ, tokE) > 0.6) {\n      isDup = true;\n      // Garder celui avec la meilleure urgency\n      const urgencyOrder = { critical: 3, high: 2, medium: 1 };\n      if ((urgencyOrder[q.urgency] || 0) > (urgencyOrder[existing.urgency] || 0)) {\n        Object.assign(existing, q);\n      }\n      break;\n    }\n  }\n  if (!isDup) unique.push(q);\n}\n\nconsole.log(`Fusion: ${allQuestions.length} questions → ${unique.length} uniques`);\nreturn unique.map(q => ({ json: q }));"
+      },
+      "id": "merge-dedup-v2",
+      "name": "Fusion Multi-Source & Dédup Avancée",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1050, 300]
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "id": "split-batches",
+      "name": "Traiter un par un",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [1300, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer VOTRE_CLE_OPENAI"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"gpt-4o-mini\",\n  \"temperature\": 0.3,\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"Tu es un expert SEO specialise en paie et RH francaises pour PayFit. Tu scores les tendances detectees avec precision.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Score cette question sur 4 criteres (1 a 5) :\\n\\n- score_novelty : La question est-elle liee a un changement RECENT ou IMMINENT ? (5 = decret publie cette semaine, 1 = sujet ancien)\\n- score_payfit_relevance : Est-ce en lien DIRECT avec la gestion de paie TPE/PME ? (5 = impact direct bulletin de paie, 1 = tres indirect)\\n- score_volume : Combien d employeurs francais pourraient chercher cette info ? (5 = tous, 1 = niche)\\n- score_timing : URGENCE TEMPORELLE (5 = dans les 7 jours, 4 = 2 semaines, 3 = 1 mois, 2 = 1 trimestre, 1 = pas urgent)\\n\\nQuestion : \\\"{{ $json.question }}\\\"\\nSource : {{ $json.source }}\\nSignal : {{ $json.signal }}\\nUrgence estimee : {{ $json.urgency }}\\nGap concurrentiel : {{ $json.competitor_gap }}\\n\\nReponds UNIQUEMENT en JSON valide :\\n{\\n  \\\"score_novelty\\\": X,\\n  \\\"score_payfit_relevance\\\": X,\\n  \\\"score_volume\\\": X,\\n  \\\"score_timing\\\": X\\n}\"\n    }\n  ]\n}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "openai-score-v2",
+      "name": "OpenAI - Scorer la Trend V2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1550, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Combiner les donnees de la question avec son score ENRICHI\nconst batchItem = $('Traiter un par un').first().json;\nconst scoreResponse = $input.first().json;\n\nconst content = scoreResponse.choices?.[0]?.message?.content || '{}';\nconst cleaned = content.replace(/```json\\n?/g, '').replace(/```\\n?/g, '').trim();\n\nlet scores;\ntry {\n  scores = JSON.parse(cleaned);\n} catch {\n  scores = { score_novelty: 3, score_payfit_relevance: 3, score_volume: 3, score_timing: 3 };\n}\n\n// Forcer en INTEGER (1-5) pour respecter les contraintes Supabase\nconst sn = Math.max(1, Math.min(5, Math.round(scores.score_novelty || 3)));\nconst sr = Math.max(1, Math.min(5, Math.round(scores.score_payfit_relevance || 3)));\nconst sv = Math.max(1, Math.min(5, Math.round(scores.score_volume || 3)));\nconst st = Math.max(1, Math.min(5, Math.round(scores.score_timing || 3)));\n\n// score_total est GENERATED dans Supabase, on ne l'envoie PAS\n// Mais on le calcule ici pour le check auto_generate\nconst computed_total = (sn + sr + sv) / 3;\nconst auto_generate = computed_total >= 4;\n\nreturn [{\n  json: {\n    type: 'trend',\n    data: {\n      question: batchItem.question,\n      source: batchItem.source,\n      signal: batchItem.signal,\n      score_novelty: sn,\n      score_payfit_relevance: sr,\n      score_volume: sv,\n      icp_target: batchItem.icp_target || 'ICP 1+2',\n      suggested_format: batchItem.suggested_format || 'Article + FAQ',\n      status: 'new'\n    },\n    metadata: {\n      urgency: batchItem.urgency,\n      score_timing: st,\n      competitor_gap: batchItem.competitor_gap,\n      auto_generate: auto_generate\n    }\n  }\n}];"
+      },
+      "id": "format-webhook-v2",
+      "name": "Formater pour Webhook V2",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1800, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://VOTRE-APP.vercel.app/api/webhook-n8n",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Webhook-Secret",
+              "value": "VOTRE_WEBHOOK_SECRET"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "send-webhook",
+      "name": "Envoyer au SaaS",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2050, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "check-auto-generate",
+              "leftValue": "={{ $('Formater pour Webhook V2').first().json.metadata.auto_generate }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-auto-trigger",
+      "name": "Score ≥ 4 ? Auto-générer",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [2300, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://VOTRE-N8N.app.n8n.cloud/webhook/trend-to-article",
+        "sendHeaders": true,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ question: $('Traiter un par un').first().json.question, source: $('Traiter un par un').first().json.source, signal: $('Traiter un par un').first().json.signal, icp_target: $('Traiter un par un').first().json.icp_target, suggested_format: $('Traiter un par un').first().json.suggested_format }) }}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "auto-trigger-article",
+      "name": "Auto-Trigger Article (Score ≥ 4)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2550, 200]
+    }
+  ],
+  "connections": {
+    "Test Manuel": {
+      "main": [
+        [
+          {
+            "node": "Mots-clés Dynamiques",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Toutes les 6h": {
+      "main": [
+        [
+          {
+            "node": "Mots-clés Dynamiques",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mots-clés Dynamiques": {
+      "main": [
+        [
+          {
+            "node": "OpenAI - Questions PAA Avancées",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Légifrance JO RSS",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "BOFIP RSS (Impôts)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "URSSAF RSS",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "OpenAI - Content Gap Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Légifrance JO RSS": {
+      "main": [
+        [
+          {
+            "node": "Parser RSS Légifrance",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "BOFIP RSS (Impôts)": {
+      "main": [
+        [
+          {
+            "node": "Parser RSS BOFIP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "URSSAF RSS": {
+      "main": [
+        [
+          {
+            "node": "Parser RSS URSSAF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI - Questions PAA Avancées": {
+      "main": [
+        [
+          {
+            "node": "Parser Réponse PAA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI - Content Gap Analysis": {
+      "main": [
+        [
+          {
+            "node": "Parser Content Gap",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parser Réponse PAA": {
+      "main": [
+        [
+          {
+            "node": "Fusion Multi-Source & Dédup Avancée",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parser RSS Légifrance": {
+      "main": [
+        [
+          {
+            "node": "Fusion Multi-Source & Dédup Avancée",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parser RSS BOFIP": {
+      "main": [
+        [
+          {
+            "node": "Fusion Multi-Source & Dédup Avancée",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parser RSS URSSAF": {
+      "main": [
+        [
+          {
+            "node": "Fusion Multi-Source & Dédup Avancée",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parser Content Gap": {
+      "main": [
+        [
+          {
+            "node": "Fusion Multi-Source & Dédup Avancée",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fusion Multi-Source & Dédup Avancée": {
+      "main": [
+        [
+          {
+            "node": "Traiter un par un",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Traiter un par un": {
+      "main": [
+        [],
+        [
+          {
+            "node": "OpenAI - Scorer la Trend V2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI - Scorer la Trend V2": {
+      "main": [
+        [
+          {
+            "node": "Formater pour Webhook V2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Formater pour Webhook V2": {
+      "main": [
+        [
+          {
+            "node": "Envoyer au SaaS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Envoyer au SaaS": {
+      "main": [
+        [
+          {
+            "node": "Score ≥ 4 ? Auto-générer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Score ≥ 4 ? Auto-générer": {
+      "main": [
+        [
+          {
+            "node": "Auto-Trigger Article (Score ≥ 4)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Traiter un par un",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auto-Trigger Article (Score ≥ 4)": {
+      "main": [
+        [
+          {
+            "node": "Traiter un par un",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "PayFit SEO Copilot"
+    },
+    {
+      "name": "V2 Optimisée"
+    }
+  ]
+}

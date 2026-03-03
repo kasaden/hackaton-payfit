@@ -13,6 +13,7 @@ import {
   LogOut,
   ScrollText,
   FileText,
+  Eye,
 } from "lucide-react";
 import Image from "next/image";
 import { Separator } from "@/components/ui/separator";
@@ -31,6 +32,7 @@ const navItems: NavItem[] = [
   { type: "link", href: "/dashboard/prompts", label: "Prompts", icon: ScrollText },
 
   { type: "separator", label: "Analytics" },
+  { type: "link", href: "/dashboard/veille", label: "Veille Concurrentielle", icon: Eye },
   { type: "link", href: "/dashboard/benchmark", label: "Benchmark", icon: BarChart3 },
   { type: "link", href: "/dashboard/quiz-analytics", label: "Quiz Analytics", icon: PieChart },
 

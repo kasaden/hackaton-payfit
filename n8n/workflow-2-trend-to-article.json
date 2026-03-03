@@ -43,7 +43,7 @@
           "parameters": [
             {
               "name": "Authorization",
-              "value": "Bearer {{ $env.OPENAI_API_KEY }}"
+              "value": "Bearer VOTRE_CLE_OPENAI"
             },
             {
               "name": "Content-Type",
@@ -77,23 +77,19 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $env.PAYFIT_APP_URL || 'https://votre-app.vercel.app' }}/api/webhook-n8n",
+        "url": "https://VOTRE-APP.vercel.app/api/webhook-n8n",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
               "name": "X-Webhook-Secret",
-              "value": "={{ $env.WEBHOOK_SECRET }}"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
+              "value": "VOTRE_WEBHOOK_SECRET"
             }
           ]
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"type\": \"generate_article\",\n  \"data\": {\n    \"keyword_primary\": \"{{ $json.keyword_primary }}\",\n    \"keywords_secondary\": {{ JSON.stringify($json.keywords_secondary) }},\n    \"icp_target\": \"{{ $json.icp_target }}\",\n    {{ $json.trend_id ? '\"trend_id\": \"' + $json.trend_id + '\"' : '' }}\n  }\n}",
+        "jsonBody": "={{ JSON.stringify({ type: 'generate_article', data: Object.assign({ keyword_primary: $json.keyword_primary, keywords_secondary: $json.keywords_secondary, icp_target: $json.icp_target }, $json.trend_id ? { trend_id: $json.trend_id } : {}) }) }}",
         "options": {
           "timeout": 120000
         }
