@@ -1,0 +1,82 @@
+/* Hero gradient animation */
+@keyframes gradient-shift {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.hero-gradient {
+  background: linear-gradient(
+    135deg,
+    #e6f0ff 0%,
+    #ffffff 25%,
+    #e6f0ff 50%,
+    #ffffff 75%,
+    #e6f0ff 100%
+  );
+  background-size: 400% 400%;
+  animation: gradient-shift 15s ease infinite;
+}
+
+/* Subtle floating decorative elements */
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-14px);
+  }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-float-delayed {
+  animation: float 6s ease-in-out 2s infinite;
+}
+
+.animate-float-slow {
+  animation: float 8s ease-in-out 1s infinite;
+}
+
+/* Pulsing glow for primary CTA */
+@keyframes pulse-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 20px rgba(0, 102, 204, 0.15),
+      0 4px 16px rgba(0, 102, 204, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(0, 102, 204, 0.25),
+      0 4px 24px rgba(0, 102, 204, 0.2);
+  }
+}
+
+.cta-glow {
+  animation: pulse-glow 3s ease-in-out infinite;
+}
+
+/* Grid pattern background */
+.grid-pattern {
+  background-image: linear-gradient(
+      rgba(0, 102, 204, 0.04) 1px,
+      transparent 1px
+    ),
+    linear-gradient(90deg, rgba(0, 102, 204, 0.04) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+/* Decorative dot pattern */
+.dot-pattern {
+  background-image: radial-gradient(
+    rgba(0, 102, 204, 0.08) 1px,
+    transparent 1px
+  );
+  background-size: 24px 24px;
+}
