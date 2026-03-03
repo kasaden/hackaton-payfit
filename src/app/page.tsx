@@ -1,11 +1,11 @@
 import Link from "next/link";
+import Image from "next/image";
 import {
   CheckCircle,
   ArrowRight,
   Shield,
   TrendingUp,
   FileText,
-  Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -16,9 +16,13 @@ export default function HomePage() {
       <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-[#0066CC] flex items-center justify-center">
-              <Zap className="w-5 h-5 text-white" />
-            </div>
+            <Image
+              src="/logo-seo-copilot.png"
+              alt="PayFit SEO Copilot"
+              width={32}
+              height={32}
+              className="rounded-lg"
+            />
             <span className="font-semibold text-lg">
               PayFit <span className="text-[#0066CC]">SEO Copilot</span>
             </span>
@@ -154,9 +158,13 @@ export default function HomePage() {
       <footer className="border-t py-8">
         <div className="max-w-6xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2 text-sm text-gray-500">
-            <div className="w-6 h-6 rounded bg-[#0066CC] flex items-center justify-center">
-              <Zap className="w-4 h-4 text-white" />
-            </div>
+            <Image
+              src="/logo-seo-copilot.png"
+              alt="Logo"
+              width={24}
+              height={24}
+              className="rounded"
+            />
             PayFit SEO Copilot — Hackathon Eugenia School 2026
           </div>
           <div className="flex gap-6 text-sm text-gray-500">

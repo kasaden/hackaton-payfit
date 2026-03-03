@@ -8,9 +8,9 @@ import {
   AlertTriangle,
   XCircle,
   ArrowRight,
-  Zap,
   RotateCcw,
 } from "lucide-react";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -74,9 +74,7 @@ function ResultsContent() {
       <header className="bg-white border-b">
         <div className="max-w-3xl mx-auto px-4 h-14 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-[#0066CC] flex items-center justify-center">
-              <Zap className="w-4 h-4 text-white" />
-            </div>
+            <Image src="/logo-seo-copilot.png" alt="Logo" width={28} height={28} className="rounded-lg" />
             <span className="font-semibold text-sm">
               PayFit <span className="text-[#0066CC]">SEO Copilot</span>
             </span>

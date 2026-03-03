@@ -10,8 +10,8 @@ import {
   BarChart3,
   PieChart,
   LogOut,
-  Zap,
 } from "lucide-react";
+import Image from "next/image";
 import { Separator } from "@/components/ui/separator";
 
 const navItems = [
@@ -37,9 +37,7 @@ export function Sidebar() {
       {/* Logo */}
       <div className="p-6">
         <Link href="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-[#0066CC] flex items-center justify-center">
-            <Zap className="w-5 h-5 text-white" />
-          </div>
+          <Image src="/logo-seo-copilot.png" alt="Logo" width={32} height={32} className="rounded-lg" />
           <div>
             <span className="font-semibold text-sm">PayFit</span>{" "}
             <span className="text-[#0066CC] font-semibold text-sm">

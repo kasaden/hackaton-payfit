@@ -7,7 +7,8 @@ import { QuizProgress } from "@/components/quiz/QuizProgress";
 import { QuizCard } from "@/components/quiz/QuizCard";
 import { MiniCalculator } from "@/components/quiz/MiniCalculator";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, ArrowLeft, Zap } from "lucide-react";
+import { ArrowRight, ArrowLeft } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 
 interface Answer {
@@ -124,9 +125,7 @@ export default function QuizPage() {
       <header className="bg-white border-b">
         <div className="max-w-3xl mx-auto px-4 h-14 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-[#0066CC] flex items-center justify-center">
-              <Zap className="w-4 h-4 text-white" />
-            </div>
+            <Image src="/logo-seo-copilot.png" alt="Logo" width={28} height={28} className="rounded-lg" />
             <span className="font-semibold text-sm">
               PayFit <span className="text-[#0066CC]">SEO Copilot</span>
             </span>

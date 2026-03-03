@@ -1,7 +1,8 @@
 import { createServiceClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { Zap, ArrowLeft, Calendar } from "lucide-react";
+import { ArrowLeft, Calendar } from "lucide-react";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 
 // Simple markdown to HTML conversion for basic formatting
@@ -55,9 +56,7 @@ export default async function ArticlePage({
       <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-3xl mx-auto px-4 h-14 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-[#0066CC] flex items-center justify-center">
-              <Zap className="w-4 h-4 text-white" />
-            </div>
+            <Image src="/logo-seo-copilot.png" alt="Logo" width={28} height={28} className="rounded-lg" />
             <span className="font-semibold text-sm">
               PayFit <span className="text-[#0066CC]">SEO Copilot</span>
             </span>

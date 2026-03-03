@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Alert } from "@/components/ui/alert";
-import { Zap, LogIn, AlertCircle } from "lucide-react";
+import { LogIn, AlertCircle } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 
 export default function LoginPage() {
@@ -44,9 +45,7 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2 mb-4">
-            <div className="w-10 h-10 rounded-xl bg-[#0066CC] flex items-center justify-center">
-              <Zap className="w-6 h-6 text-white" />
-            </div>
+            <Image src="/logo-seo-copilot.png" alt="Logo" width={40} height={40} className="rounded-xl" />
           </Link>
           <h1 className="text-xl font-bold">
             PayFit <span className="text-[#0066CC]">SEO Copilot</span>
