@@ -1,0 +1,195 @@
+{
+  "name": "PayFit SEO Copilot - Trend → Article SEO",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "trend-to-article",
+        "options": {
+          "responseMode": "lastNode"
+        }
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 200],
+      "webhookId": "trend-to-article"
+    },
+    {
+      "parameters": {},
+      "id": "manual-trigger-2",
+      "name": "Test Manuel",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Si déclenché par webhook, utiliser les données reçues\n// Si déclenché manuellement, utiliser des données de test\n\nconst input = $input.first().json;\n\n// Données du webhook OU données de test\nconst trend = {\n  question: input.question || 'Transparence des salaires 2026 : quelles obligations pour les employeurs ?',\n  source: input.source || 'Directive UE 2023/970',\n  signal: input.signal || 'Transposition directive européenne avant juin 2026',\n  icp_target: input.icp_target || 'ICP 2',\n  suggested_format: input.suggested_format || 'Article pilier + FAQ',\n  trend_id: input.trend_id || null\n};\n\nreturn [{ json: trend }];"
+      },
+      "id": "prepare-trend",
+      "name": "Préparer les données",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [300, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.OPENAI_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"gpt-4o-mini\",\n  \"temperature\": 0.4,\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"Tu es un expert SEO spécialisé en paie et RH françaises pour PayFit. Tu génères des briefs de contenu SEO structurés pour des articles de blog.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"À partir de cette tendance détectée, génère un brief SEO complet pour un article de blog PayFit.\\n\\nTendance : {{ $json.question }}\\nSource : {{ $json.source }}\\nSignal : {{ $json.signal }}\\nICP cible : {{ $json.icp_target }}\\n\\nGénère un brief en JSON valide (pas de markdown) :\\n{\\n  \\\"keyword_primary\\\": \\\"mot-clé principal pour l'article (tel que recherché sur Google)\\\",\\n  \\\"keywords_secondary\\\": [\\\"4 à 6 mots-clés secondaires pertinents\\\"],\\n  \\\"icp_target\\\": \\\"ICP 1\\\" ou \\\"ICP 2\\\" ou \\\"ICP 1+2\\\",\\n  \\\"title_suggestion\\\": \\\"suggestion de titre H1 SEO avec l'année 2026\\\",\\n  \\\"angle\\\": \\\"angle éditorial recommandé en 1 phrase\\\",\\n  \\\"outline\\\": [\\\"H2 section 1\\\", \\\"H2 section 2\\\", \\\"H2 section 3\\\", \\\"H2 section 4\\\"],\\n  \\\"sources_to_cite\\\": [\\\"sources juridiques à citer dans l'article\\\"],\\n  \\\"estimated_word_count\\\": 1000\\n}\"\n    }\n  ]\n}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "openai-brief",
+      "name": "OpenAI - Générer Brief SEO",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [600, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extraire le brief SEO de la réponse OpenAI\nconst response = $input.first().json;\nconst content = response.choices?.[0]?.message?.content || '{}';\nconst cleaned = content.replace(/```json\\n?/g, '').replace(/```\\n?/g, '').trim();\n\nlet brief;\ntry {\n  brief = JSON.parse(cleaned);\n} catch (e) {\n  // Fallback si le JSON est malformé\n  const trendData = $('Préparer les données').first().json;\n  brief = {\n    keyword_primary: trendData.question.split(':')[0].trim().toLowerCase(),\n    keywords_secondary: [trendData.source, 'paie 2026', 'obligations employeur'],\n    icp_target: trendData.icp_target || 'ICP 1+2',\n    title_suggestion: trendData.question,\n    angle: 'Guide pratique pour employeurs',\n    outline: ['Définition', 'Obligations', 'Impact paie', 'FAQ'],\n    sources_to_cite: [trendData.source],\n    estimated_word_count: 1000\n  };\n}\n\n// Garder le trend_id pour le lier à l'article\nconst trendData = $('Préparer les données').first().json;\nbrief.trend_id = trendData.trend_id;\n\nreturn [{ json: brief }];"
+      },
+      "id": "parse-brief",
+      "name": "Parser le Brief",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.PAYFIT_APP_URL || 'https://votre-app.vercel.app' }}/api/webhook-n8n",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Webhook-Secret",
+              "value": "={{ $env.WEBHOOK_SECRET }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"type\": \"generate_article\",\n  \"data\": {\n    \"keyword_primary\": \"{{ $json.keyword_primary }}\",\n    \"keywords_secondary\": {{ JSON.stringify($json.keywords_secondary) }},\n    \"icp_target\": \"{{ $json.icp_target }}\",\n    {{ $json.trend_id ? '\"trend_id\": \"' + $json.trend_id + '\"' : '' }}\n  }\n}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "generate-article",
+      "name": "Générer l'Article via Webhook",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1200, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Résumé final de l'exécution\nconst brief = $('Parser le Brief').first().json;\nconst articleResponse = $input.first().json;\n\nconst result = {\n  status: articleResponse.success ? 'SUCCESS' : 'FAILED',\n  keyword: brief.keyword_primary,\n  article_title: articleResponse.article?.title || 'N/A',\n  article_slug: articleResponse.article?.slug || 'N/A',\n  article_id: articleResponse.article?.id || 'N/A',\n  word_count: articleResponse.article?.word_count || 0,\n  brief_generated: {\n    title_suggestion: brief.title_suggestion,\n    keywords_secondary: brief.keywords_secondary,\n    angle: brief.angle\n  },\n  message: articleResponse.success \n    ? `Article généré avec succès : ${articleResponse.article?.title} (${articleResponse.article?.word_count} mots)`\n    : `Erreur : ${articleResponse.error || 'Unknown error'}`\n};\n\nreturn [{ json: result }];"
+      },
+      "id": "summary",
+      "name": "Résumé",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1500, 300]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Préparer les données",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Test Manuel": {
+      "main": [
+        [
+          {
+            "node": "Préparer les données",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Préparer les données": {
+      "main": [
+        [
+          {
+            "node": "OpenAI - Générer Brief SEO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI - Générer Brief SEO": {
+      "main": [
+        [
+          {
+            "node": "Parser le Brief",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parser le Brief": {
+      "main": [
+        [
+          {
+            "node": "Générer l'Article via Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Générer l'Article via Webhook": {
+      "main": [
+        [
+          {
+            "node": "Résumé",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "PayFit SEO Copilot"
+    }
+  ]
+}
