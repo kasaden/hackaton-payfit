@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient, createRouteClient } from '@/lib/supabase/server'
 import { openai } from '@/lib/openai'
+import { checkRateLimit } from '@/lib/rate-limit'
+import { isValidOrigin } from '@/lib/csrf'
 
 function slugify(text: string): string {
   return text
@@ -15,11 +17,25 @@ function slugify(text: string): string {
 
 export async function POST(request: NextRequest) {
   try {
+    // Vérifier l'origin (CSRF)
+    if (!isValidOrigin(request)) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
     // Vérifier l'authentification
     const authClient = createRouteClient(request)
     const { data: { user } } = await authClient.auth.getUser()
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Rate limiting : max 10 générations par utilisateur par heure
+    const { allowed, remaining } = checkRateLimit(`generate:${user.id}`, { limit: 10, windowSeconds: 3600 })
+    if (!allowed) {
+      return NextResponse.json(
+        { error: 'Trop de requêtes. Réessayez plus tard.' },
+        { status: 429, headers: { 'X-RateLimit-Remaining': String(remaining) } }
+      )
     }
 
     const body = await request.json()
@@ -102,7 +118,7 @@ Réponds uniquement avec l'article en markdown. Pas d'introduction ni de comment
     let data, error
 
     if (article_id) {
-      // Mode re-génération : UPDATE l'article existant
+      // Mode re-génération : UPDATE l'article existant (vérifie que l'user est propriétaire)
       const result = await supabase
         .from('articles')
         .update({
@@ -116,12 +132,13 @@ Réponds uniquement avec l'article en markdown. Pas d'introduction ni de comment
           updated_at: new Date().toISOString(),
         })
         .eq('id', article_id)
+        .eq('user_id', user.id)
         .select()
         .single()
       data = result.data
       error = result.error
     } else {
-      // Mode création : INSERT un nouvel article
+      // Mode création : INSERT un nouvel article avec user_id
       const result = await supabase
         .from('articles')
         .insert({
@@ -132,6 +149,7 @@ Réponds uniquement avec l'article en markdown. Pas d'introduction ni de comment
           content_markdown,
           meta_description,
           word_count,
+          user_id: user.id,
           ...(trend_id ? { trend_id } : {}),
         })
         .select()

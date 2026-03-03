@@ -1,14 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createRouteClient } from '@/lib/supabase/server'
 import { openai } from '@/lib/openai'
+import { checkRateLimit } from '@/lib/rate-limit'
+import { isValidOrigin } from '@/lib/csrf'
 
 export async function POST(request: NextRequest) {
   try {
+    // Vérifier l'origin (CSRF)
+    if (!isValidOrigin(request)) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
     // Vérifier l'authentification
     const authClient = createRouteClient(request)
     const { data: { user } } = await authClient.auth.getUser()
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Rate limiting : max 30 scorings par utilisateur par heure
+    const { allowed, remaining } = checkRateLimit(`score:${user.id}`, { limit: 30, windowSeconds: 3600 })
+    if (!allowed) {
+      return NextResponse.json(
+        { error: 'Trop de requêtes. Réessayez plus tard.' },
+        { status: 429, headers: { 'X-RateLimit-Remaining': String(remaining) } }
+      )
     }
 
     const body = await request.json()

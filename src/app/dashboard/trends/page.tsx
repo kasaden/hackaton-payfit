@@ -90,6 +90,7 @@ export default function TrendsPage() {
     setSaving(true);
 
     const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
     await supabase.from("trends").insert({
       question: newQuestion,
       source: scoreResult.source,
@@ -100,6 +101,7 @@ export default function TrendsPage() {
       icp_target: scoreResult.icp_target,
       suggested_format: scoreResult.suggested_format,
       status: "new",
+      user_id: user?.id,
     });
 
     setDialogOpen(false);
