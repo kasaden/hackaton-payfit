@@ -12,7 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Plus, ExternalLink, Trash2, RefreshCw } from "lucide-react";
+import { FileText, Plus, ExternalLink, Trash2, RefreshCw, Pencil, RotateCw } from "lucide-react";
 import Link from "next/link";
 
 export default function ArticlesPage() {
@@ -167,7 +167,7 @@ export default function ArticlesPage() {
                       {article.word_count || "—"}
                     </TableCell>
                     <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
+                      <div className="flex justify-end gap-1">
                         <a
                           href={`/articles/${article.slug}`}
                           target="_blank"
@@ -177,15 +177,37 @@ export default function ArticlesPage() {
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8 text-gray-500 hover:text-[#0066CC]"
+                            title="Voir l'article"
                           >
                             <ExternalLink className="w-4 h-4" />
                           </Button>
                         </a>
+                        <Link href={`/dashboard/generator?article_id=${article.id}`}>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-gray-500 hover:text-[#0066CC]"
+                            title="Modifier l'article"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </Button>
+                        </Link>
+                        <Link href={`/dashboard/generator?article_id=${article.id}&regenerate=true`}>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-gray-500 hover:text-amber-600 hover:bg-amber-50"
+                            title="Re-générer l'article"
+                          >
+                            <RotateCw className="w-4 h-4" />
+                          </Button>
+                        </Link>
                         <Button
                           variant="ghost"
                           size="icon"
                           className="h-8 w-8 text-gray-500 hover:text-red-600 hover:bg-red-50"
                           onClick={() => handleDelete(article.id)}
+                          title="Supprimer l'article"
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>

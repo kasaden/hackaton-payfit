@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     // On ajoute custom_prompt récupéré depuis le body
-    const { keyword_primary, keywords_secondary, icp_target, trend_id, custom_prompt } = body
+    const { keyword_primary, keywords_secondary, icp_target, trend_id, custom_prompt, article_id } = body
 
     if (!keyword_primary || !keywords_secondary || !icp_target) {
       return NextResponse.json(
@@ -92,23 +92,49 @@ Réponds uniquement avec l'article en markdown. Pas d'introduction ni de comment
 
     const supabase = createServiceClient()
 
-    const { data, error } = await supabase
-      .from('articles')
-      .insert({
-        title,
-        slug,
-        keyword_primary,
-        keywords_secondary,
-        content_markdown,
-        meta_description,
-        word_count,
-        ...(trend_id ? { trend_id } : {}),
-      })
-      .select()
-      .single()
+    let data, error
+
+    if (article_id) {
+      // Mode re-génération : UPDATE l'article existant
+      const result = await supabase
+        .from('articles')
+        .update({
+          title,
+          slug,
+          keyword_primary,
+          keywords_secondary,
+          content_markdown,
+          meta_description,
+          word_count,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', article_id)
+        .select()
+        .single()
+      data = result.data
+      error = result.error
+    } else {
+      // Mode création : INSERT un nouvel article
+      const result = await supabase
+        .from('articles')
+        .insert({
+          title,
+          slug,
+          keyword_primary,
+          keywords_secondary,
+          content_markdown,
+          meta_description,
+          word_count,
+          ...(trend_id ? { trend_id } : {}),
+        })
+        .select()
+        .single()
+      data = result.data
+      error = result.error
+    }
 
     if (error) {
-      console.error('Supabase insert error:', error)
+      console.error('Supabase error:', error)
       return NextResponse.json(
         { error: 'Failed to save article' },
         { status: 500 }

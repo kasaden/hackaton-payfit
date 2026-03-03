@@ -76,6 +76,8 @@ Ton ton doit être direct et urgent. Réponds uniquement en markdown sans intro.
 function GeneratorContent() {
   const searchParams = useSearchParams();
   const trendId = searchParams.get("trend_id");
+  const articleId = searchParams.get("article_id");
+  const isRegenerate = searchParams.get("regenerate") === "true";
 
   const [step, setStep] = useState(1);
   const [keywordPrimary, setKeywordPrimary] = useState("");
@@ -100,10 +102,47 @@ function GeneratorContent() {
   const [allCompliant, setAllCompliant] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [published, setPublished] = useState(false);
+  const [loadingArticle, setLoadingArticle] = useState(false);
+
+  // Mode édition : charger un article existant
+  useEffect(() => {
+    if (articleId) {
+      setLoadingArticle(true);
+      const supabase = createClient();
+      supabase
+        .from("articles")
+        .select("*")
+        .eq("id", articleId)
+        .single()
+        .then(({ data }) => {
+          if (data) {
+            setKeywordPrimary(data.keyword_primary || "");
+            setKeywordsSecondary(
+              (data.keywords_secondary || []).join(", "),
+            );
+            setIcpTarget(data.icp_target || "ICP 2");
+            setArticle({
+              id: data.id,
+              title: data.title,
+              slug: data.slug,
+              content_markdown: data.content_markdown,
+              word_count: data.word_count,
+            });
+            setEditedContent(data.content_markdown);
+            // Mode édition directe : aller à l'étape 2
+            // Mode re-génération : rester à l'étape 1
+            if (!isRegenerate) {
+              setStep(2);
+            }
+          }
+          setLoadingArticle(false);
+        });
+    }
+  }, [articleId, isRegenerate]);
 
   // Pré-remplir depuis la tendance
   useEffect(() => {
-    if (trendId) {
+    if (trendId && !articleId) {
       const supabase = createClient();
       supabase
         .from("trends")
@@ -117,7 +156,7 @@ function GeneratorContent() {
           }
         });
     }
-  }, [trendId]);
+  }, [trendId, articleId]);
 
   // Mettre à jour le texte du prompt quand on change de template
   const handleTemplateChange = (templateId: string) => {
@@ -148,7 +187,9 @@ function GeneratorContent() {
             .filter(Boolean),
           icp_target: icpTarget,
           trend_id: trendId || undefined,
-          custom_prompt: customPrompt, // Envoi du prompt customisé à l'API
+          custom_prompt: customPrompt,
+          // Si on re-génère, on envoie l'article_id pour UPDATE au lieu d'INSERT
+          article_id: isRegenerate && article ? article.id : undefined,
         }),
       });
 
@@ -157,6 +198,7 @@ function GeneratorContent() {
       const data = await res.json();
       setArticle(data);
       setEditedContent(data.content_markdown);
+      setPublished(false);
       setStep(2);
     } catch {
       alert("Erreur lors de la génération. Vérifiez votre clé API OpenAI.");
@@ -196,7 +238,13 @@ function GeneratorContent() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Générateur d&apos;articles</h1>
+        <h1 className="text-2xl font-bold">
+          {articleId
+            ? isRegenerate
+              ? "Re-générer un article"
+              : "Modifier un article"
+            : "Générateur d\u0027articles"}
+        </h1>
         <div className="flex gap-2">
           {[1, 2, 3].map((s) => (
             <div
@@ -228,8 +276,16 @@ function GeneratorContent() {
         </div>
       </div>
 
+      {/* Chargement d'un article existant */}
+      {loadingArticle && (
+        <div className="flex items-center justify-center p-12">
+          <Loader2 className="w-6 h-6 animate-spin mr-2 text-[#0066CC]" />
+          <span className="text-gray-500">Chargement de l&apos;article...</span>
+        </div>
+      )}
+
       {/* Étape 1 — Configuration */}
-      {step === 1 && (
+      {step === 1 && !loadingArticle && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Colonne de gauche : Champs basiques */}
           <Card className="p-6 space-y-4">

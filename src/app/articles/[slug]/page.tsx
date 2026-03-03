@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { createServiceClient } from "@/lib/supabase/server";
+import { createServerComponentClient } from "@/lib/supabase/server";
 import {
   Star,
   CheckCircle,
@@ -89,17 +89,26 @@ export default async function ArticlePage({
   // 1. LA CORRECTION DU 404 EST ICI : Await params pour Next.js 15+
   const { slug } = await params;
 
-  const supabase = createServiceClient();
+  const supabase = await createServerComponentClient();
 
+  // Vérifier si l'utilisateur est connecté
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  // Chercher l'article par slug
   const { data: article } = await supabase
     .from("articles")
     .select("*")
     .eq("slug", slug)
-    // On commente is_published pour vous permettre de voir le lien même en brouillon
-    // .eq("is_published", true)
     .single();
 
   if (!article) {
+    notFound();
+  }
+
+  // Si l'article est un brouillon, seuls les utilisateurs connectés peuvent le voir
+  if (!article.is_published && !user) {
     notFound();
   }
 
