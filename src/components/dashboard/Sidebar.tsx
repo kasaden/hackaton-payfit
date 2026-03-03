@@ -14,11 +14,17 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { Separator } from "@/components/ui/separator";
+import { FileText } from "lucide-react";
 
 const navItems = [
   { href: "/dashboard", label: "Vue d'ensemble", icon: LayoutDashboard },
   { href: "/dashboard/trends", label: "Tendances", icon: TrendingUp },
   { href: "/dashboard/generator", label: "Générateur", icon: Sparkles },
+  {
+    label: "Articles",
+    href: "/dashboard/articles",
+    icon: FileText,
+  },
   { href: "/dashboard/benchmark", label: "Benchmark", icon: BarChart3 },
   {
     href: "/dashboard/quiz-analytics",

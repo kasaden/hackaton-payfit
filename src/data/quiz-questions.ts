@@ -9,12 +9,8 @@ export interface QuizQuestion {
   id: string
   question: string
   description?: string
-  type: 'multiple_choice' | 'calculator'
-  options?: QuizOption[]
-  calculator?: {
-    type: 'conges' | 'heures'
-    label: string
-  }
+  type: 'multiple_choice'
+  options: QuizOption[]
 }
 
 export const quizQuestions: QuizQuestion[] = [
@@ -32,48 +28,25 @@ export const quizQuestions: QuizQuestion[] = [
   {
     id: 'q2',
     question: 'Avez-vous mis à jour vos bulletins de paie avec les nouveaux taux 2026 ?',
-    description:
-      'SMIC à 12,02€/h, plafond SS à 4005€, RGDU remplaçant les anciens dispositifs',
+    description: 'SMIC, plafond SS, et RGDU remplaçant les anciens dispositifs',
     type: 'multiple_choice',
     options: [
       { label: 'Oui, tout est à jour depuis janvier', value: 'a', points: 3 },
       { label: 'Mon logiciel le fait automatiquement', value: 'b', points: 3 },
       { label: 'Pas encore, je dois vérifier', value: 'c', points: 1, painPoint: 'miseajour_retard' },
-      {
-        label: "Je ne savais pas qu'il y avait des changements",
-        value: 'd',
-        points: 0,
-        painPoint: 'veille_absente',
-      },
+      { label: "Je ne savais pas qu'il y avait des changements", value: 'd', points: 0, painPoint: 'veille_absente' },
     ],
   },
   {
     id: 'q3',
-    question:
-      'Êtes-vous prêt pour la transparence des salaires obligatoire en 2026 ?',
-    description:
-      'Directive UE : fourchettes salariales dans les offres, accès des salariés aux écarts',
+    question: 'Êtes-vous prêt pour la transparence des salaires (directive UE 2026) ?',
+    description: 'Affichage des fourchettes salariales et accès aux écarts de rémunération.',
     type: 'multiple_choice',
     options: [
       { label: 'Oui, nos grilles salariales sont prêtes', value: 'a', points: 3 },
-      {
-        label: "J'en ai entendu parler mais je n'ai rien fait",
-        value: 'b',
-        points: 1,
-        painPoint: 'transparence_nonpret',
-      },
-      {
-        label: 'Ça ne nous concerne pas (< 100 salariés)',
-        value: 'c',
-        points: 1,
-        painPoint: 'transparence_meconnaissance',
-      },
-      {
-        label: "Première fois que j'en entends parler",
-        value: 'd',
-        points: 0,
-        painPoint: 'transparence_inconnu',
-      },
+      { label: "J'en ai entendu parler mais je n'ai rien fait", value: 'b', points: 1, painPoint: 'transparence_nonpret' },
+      { label: 'Ça ne nous concerne pas (< 100 salariés)', value: 'c', points: 1, painPoint: 'transparence_meconnaissance' },
+      { label: "Première fois que j'en entends parler", value: 'd', points: 0, painPoint: 'transparence_inconnu' },
     ],
   },
   {
@@ -81,170 +54,94 @@ export const quizQuestions: QuizQuestion[] = [
     question: 'Comment calculez-vous les congés payés de vos salariés ?',
     type: 'multiple_choice',
     options: [
-      { label: 'Automatiquement via mon logiciel de paie', value: 'a', points: 3 },
+      { label: 'Automatiquement via mon logiciel', value: 'a', points: 3 },
       { label: 'Je connais la règle des 2,5 jours/mois', value: 'b', points: 2 },
       { label: 'Je laisse mon comptable gérer', value: 'c', points: 1 },
-      {
-        label: 'Je ne suis pas sûr de la méthode',
-        value: 'd',
-        points: 0,
-        painPoint: 'conges_confusion',
-      },
+      { label: 'Je ne suis pas sûr de la méthode', value: 'd', points: 0, painPoint: 'conges_confusion' },
     ],
   },
   {
     id: 'q5',
-    question:
-      'Savez-vous que les salariés en arrêt maladie acquièrent désormais des congés payés ?',
-    description:
-      'Depuis la loi du 22 avril 2024 : 2 jours ouvrables/mois en arrêt maladie non professionnel',
+    question: 'Vos salariés en arrêt maladie acquièrent-ils bien leurs congés payés ?',
+    description: 'Obligation légale : 2 jours ouvrables/mois en arrêt maladie non professionnel.',
     type: 'multiple_choice',
     options: [
-      {
-        label: "Oui, c'est déjà intégré dans notre gestion",
-        value: 'a',
-        points: 3,
-      },
-      {
-        label: "Oui, mais je n'ai pas encore adapté mes process",
-        value: 'b',
-        points: 1,
-        painPoint: 'conges_maladie_retard',
-      },
-      {
-        label: 'Non, je ne connaissais pas cette règle',
-        value: 'c',
-        points: 0,
-        painPoint: 'conges_maladie_inconnu',
-      },
+      { label: "Oui, c'est déjà paramétré", value: 'a', points: 3 },
+      { label: "Oui, mais on le fait manuellement", value: 'b', points: 1, painPoint: 'conges_maladie_manuel' },
+      { label: 'Non, je ne connaissais pas cette règle', value: 'c', points: 0, painPoint: 'conges_maladie_inconnu' },
+    ],
+  },
+  // NOUVELLE QUESTION 6 (Remplace le calculateur)
+  {
+    id: 'q6',
+    question: "Gérez-vous la comparaison 'Maintien de salaire' vs 'Règle du 1/10ème' pour les congés ?",
+    description: "Le code du travail impose d'appliquer la méthode la plus favorable au salarié lors de sa prise de congés.",
+    type: 'multiple_choice',
+    options: [
+      { label: 'Mon logiciel compare et applique le meilleur', value: 'a', points: 3 },
+      { label: "C'est mon comptable qui gère ce calcul", value: 'b', points: 2 },
+      { label: 'Je le fais à la main (ou sur Excel)', value: 'c', points: 0, painPoint: 'conges_10eme_manuel' },
+      { label: "Je ne savais pas qu'il fallait comparer", value: 'd', points: 0, painPoint: 'conges_10eme_inconnu' },
     ],
   },
   {
-    id: 'q6',
-    question: "Mini-calcul : vérifiez le solde de congés d'un salarié",
-    description: 'Entrez les données pour vérifier si votre calcul est correct',
-    type: 'calculator',
-    calculator: { type: 'conges', label: 'Calculateur de congés payés' },
-  },
-  {
     id: 'q7',
-    question:
-      "Quel est le coût réel d'une rupture conventionnelle pour votre entreprise en 2026 ?",
-    description:
-      'Le forfait social est passé de 30% à 40% au 1er janvier 2026',
+    question: "Connaissez-vous le coût réel d'une rupture conventionnelle en 2026 ?",
+    description: "Le forfait social a fortement augmenté au 1er janvier.",
     type: 'multiple_choice',
     options: [
-      { label: 'Je connais le nouveau taux à 40%', value: 'a', points: 3 },
-      {
-        label: "Je savais que ça avait changé mais pas le montant exact",
-        value: 'b',
-        points: 1,
-      },
-      {
-        label: "Je pensais que c'était toujours 30%",
-        value: 'c',
-        points: 0,
-        painPoint: 'rupture_conv_erreur',
-      },
-      { label: 'Je ne gère pas ce type de situation', value: 'd', points: 1 },
+      { label: 'Oui, mon outil est à jour avec le taux de 40%', value: 'a', points: 3 },
+      { label: "Je savais qu'il y a eu un changement", value: 'b', points: 1 },
+      { label: "Je pensais que c'était toujours 30%", value: 'c', points: 0, painPoint: 'rupture_conv_erreur' },
     ],
   },
   {
     id: 'q8',
-    question:
-      'Vos titres-restaurant sont-ils conformes au plafond 2026 ?',
-    description: 'Exonération maximale : 7,32€ par titre en 2026',
+    question: 'Vos titres-restaurant sont-ils conformes au plafond 2026 ?',
     type: 'multiple_choice',
     options: [
-      {
-        label: 'Oui, valeur et participation employeur sont à jour',
-        value: 'a',
-        points: 3,
-      },
-      {
-        label: 'Je dois vérifier les montants',
-        value: 'b',
-        points: 1,
-        painPoint: 'titres_resto_verif',
-      },
+      { label: 'Oui, exonération maximale à 7,32€', value: 'a', points: 3 },
+      { label: 'Je dois vérifier mes paramétrages', value: 'b', points: 1, painPoint: 'titres_resto_verif' },
       { label: 'On ne propose pas de titres-restaurant', value: 'c', points: 2 },
-      {
-        label: "Je ne connais pas le plafond d'exonération",
-        value: 'd',
-        points: 0,
-        painPoint: 'titres_resto_inconnu',
-      },
     ],
   },
   {
     id: 'q9',
-    question:
-      'Connaissez-vous le nouveau congé supplémentaire de naissance créé en 2026 ?',
-    description:
-      'LFSS 2026 : nouveau congé pour les naissances/adoptions à compter du 1er janvier',
+    question: 'Connaissez-vous le nouveau "congé de naissance" créé en 2026 ?',
     type: 'multiple_choice',
     options: [
-      {
-        label: "Oui, je l'ai déjà intégré dans ma gestion",
-        value: 'a',
-        points: 3,
-      },
-      {
-        label: "J'en ai entendu parler mais pas les détails",
-        value: 'b',
-        points: 1,
-        painPoint: 'conge_naissance_flou',
-      },
-      {
-        label: "Non, c'est nouveau pour moi",
-        value: 'c',
-        points: 0,
-        painPoint: 'conge_naissance_inconnu',
-      },
+      { label: "Oui, il est intégré dans mon SI RH", value: 'a', points: 3 },
+      { label: "J'en ai entendu parler mais sans plus", value: 'b', points: 1, painPoint: 'conge_naissance_flou' },
+      { label: "C'est totalement nouveau pour moi", value: 'c', points: 0, painPoint: 'conge_naissance_inconnu' },
+    ],
+  },
+  // NOUVELLE QUESTION 10 (Remplace le calculateur)
+  {
+    id: 'q10',
+    question: 'Appliquez-vous la déduction forfaitaire patronale (loi TEPA) sur les heures supplémentaires ?',
+    description: 'Une aide de 1,50€ par heure supplémentaire pour les entreprises de moins de 20 salariés.',
+    type: 'multiple_choice',
+    options: [
+      { label: "Oui, c'est déduit automatiquement", value: 'a', points: 3 },
+      { label: "Non, c'est trop complexe à calculer/déclarer", value: 'b', points: 0, painPoint: 'tepa_complexe' },
+      { label: "Je ne savais pas qu'on pouvait réduire nos charges", value: 'c', points: 0, painPoint: 'tepa_inconnu' },
+      { label: "Plus de 20 salariés (non éligible)", value: 'd', points: 2 },
     ],
   },
   {
-    id: 'q10',
-    question: 'Mini-calcul : heures supplémentaires et déduction forfaitaire',
-    description:
-      'Vérifiez votre éligibilité à la déduction forfaitaire étendue en 2026',
-    type: 'calculator',
-    calculator: {
-      type: 'heures',
-      label: 'Calculateur heures supplémentaires',
-    },
-  },
-  {
     id: 'q11',
-    question:
-      'Votre DSN mensuelle est-elle à jour des nouvelles contributions 2026 ?',
-    description:
-      'Nouvelles contributions sectorielles (dialogue social, formation) à déclarer en DSN',
+    question: 'Votre DSN mensuelle est-elle 100% fiable ?',
     type: 'multiple_choice',
     options: [
-      {
-        label: 'Oui, mon logiciel gère la DSN automatiquement',
-        value: 'a',
-        points: 3,
-      },
+      { label: 'Oui, générée et envoyée automatiquement', value: 'a', points: 3 },
       { label: "Mon comptable s'en occupe", value: 'b', points: 2 },
-      {
-        label: 'Je ne suis pas sûr que tout soit déclaré',
-        value: 'c',
-        points: 0,
-        painPoint: 'dsn_incertitude',
-      },
-      {
-        label: "Je ne sais pas ce qu'est la DSN",
-        value: 'd',
-        points: 0,
-        painPoint: 'dsn_inconnu',
-      },
+      { label: 'J\'ai parfois des retours d\'erreur de l\'URSSAF', value: 'c', points: 0, painPoint: 'dsn_erreurs' },
+      { label: "Je ne suis pas très à l'aise avec la DSN", value: 'd', points: 0, painPoint: 'dsn_incertitude' },
     ],
   },
   {
     id: 'q12',
-    question: 'Combien de salariés compte votre entreprise ?',
+    question: 'Pour terminer, combien de salariés compte votre entreprise ?',
     type: 'multiple_choice',
     options: [
       { label: '1 à 9 salariés', value: '1-9', points: 0 },
@@ -255,23 +152,25 @@ export const quizQuestions: QuizQuestion[] = [
   },
 ]
 
-// Pain points descriptions pour les résultats
 export const painPointLabels: Record<string, string> = {
-  paie_manuelle: 'Gestion de paie manuelle — risque élevé d\'erreurs et de non-conformité',
-  paie_confusion: 'Manque de visibilité sur votre processus de paie',
-  miseajour_retard: 'Bulletins de paie potentiellement non conformes aux taux 2026',
-  veille_absente: 'Absence de veille réglementaire — changements légaux non détectés',
-  transparence_nonpret: 'Directive transparence salariale : préparation nécessaire avant juin 2026',
-  transparence_meconnaissance: 'La transparence salariale concerne aussi les offres d\'emploi des TPE',
-  transparence_inconnu: 'Directive transparence salariale non identifiée — risque de non-conformité',
-  conges_confusion: 'Calcul des congés payés incertain — risque de litige',
-  conges_maladie_retard: 'Acquisition congés en arrêt maladie non encore intégrée',
-  conges_maladie_inconnu: 'Nouvelle règle congés/maladie non connue — mise en conformité urgente',
-  rupture_conv_erreur: 'Forfait social rupture conventionnelle : erreur de taux (30% → 40%)',
-  titres_resto_verif: 'Titres-restaurant : vérification des plafonds 2026 nécessaire',
-  titres_resto_inconnu: 'Plafond exonération titres-restaurant 2026 non connu',
-  conge_naissance_flou: 'Nouveau congé de naissance 2026 : détails à maîtriser',
-  conge_naissance_inconnu: 'Congé supplémentaire de naissance 2026 non identifié',
-  dsn_incertitude: 'DSN potentiellement incomplète — risque de redressement URSSAF',
-  dsn_inconnu: 'Déclaration Sociale Nominative non maîtrisée — risque majeur',
+  paie_manuelle: 'Gestion manuelle risquée (Excel)',
+  paie_confusion: 'Manque de visibilité sur le process',
+  miseajour_retard: 'Risque de bulletins non conformes (2026)',
+  veille_absente: 'Absence de veille légale',
+  transparence_nonpret: 'Directive transparence salariale non préparée',
+  transparence_meconnaissance: 'La transparence concerne aussi les offres des TPE',
+  transparence_inconnu: 'Directive transparence inconnue',
+  conges_confusion: 'Calcul des congés incertain',
+  conges_maladie_manuel: 'Acquisition congés maladie non automatisée',
+  conges_maladie_inconnu: 'Règle congés/maladie non appliquée',
+  conges_10eme_manuel: 'Calcul fastidieux du 10ème vs maintien de salaire',
+  conges_10eme_inconnu: 'Règle de comparaison des indemnités de congés non appliquée',
+  rupture_conv_erreur: 'Erreur sur le forfait social (rupture)',
+  titres_resto_verif: 'Plafonds titres-restaurant à vérifier',
+  conge_naissance_flou: 'Nouveau congé de naissance mal maîtrisé',
+  conge_naissance_inconnu: 'Congé de naissance ignoré',
+  tepa_complexe: 'Perte financière : déduction TEPA non appliquée car trop complexe',
+  tepa_inconnu: 'Perte financière : ignorance des déductions sur heures sup',
+  dsn_erreurs: 'Erreurs fréquentes en DSN',
+  dsn_incertitude: 'Gestion DSN non maîtrisée',
 }
