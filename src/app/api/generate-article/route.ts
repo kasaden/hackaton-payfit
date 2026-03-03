@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServiceClient } from '@/lib/supabase/server'
+import { createServiceClient, createRouteClient } from '@/lib/supabase/server'
 import { openai } from '@/lib/openai'
 
 function slugify(text: string): string {
@@ -15,6 +15,13 @@ function slugify(text: string): string {
 
 export async function POST(request: NextRequest) {
   try {
+    // Vérifier l'authentification
+    const authClient = createRouteClient(request)
+    const { data: { user } } = await authClient.auth.getUser()
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const body = await request.json()
     // On ajoute custom_prompt récupéré depuis le body
     const { keyword_primary, keywords_secondary, icp_target, trend_id, custom_prompt, article_id } = body

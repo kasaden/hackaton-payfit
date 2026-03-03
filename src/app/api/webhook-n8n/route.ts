@@ -14,16 +14,22 @@ import { createServiceClient } from '@/lib/supabase/server'
  */
 export async function POST(request: NextRequest) {
   try {
-    // Validate webhook secret (skip if not configured, for hackathon flexibility)
+    // Validate webhook secret (mandatory)
     const webhookSecret = process.env.WEBHOOK_SECRET
-    if (webhookSecret) {
-      const headerSecret = request.headers.get('X-Webhook-Secret')
-      if (headerSecret !== webhookSecret) {
-        return NextResponse.json(
-          { error: 'Unauthorized' },
-          { status: 401 }
-        )
-      }
+    if (!webhookSecret) {
+      console.error('WEBHOOK_SECRET environment variable is not configured')
+      return NextResponse.json(
+        { error: 'Server misconfiguration' },
+        { status: 500 }
+      )
+    }
+
+    const headerSecret = request.headers.get('X-Webhook-Secret')
+    if (headerSecret !== webhookSecret) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
     }
 
     const body = await request.json()

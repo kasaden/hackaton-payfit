@@ -1,8 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createRouteClient } from '@/lib/supabase/server'
 import { openai } from '@/lib/openai'
 
 export async function POST(request: NextRequest) {
   try {
+    // Vérifier l'authentification
+    const authClient = createRouteClient(request)
+    const { data: { user } } = await authClient.auth.getUser()
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const body = await request.json()
     const { question } = body
 
@@ -54,7 +62,17 @@ Réponds UNIQUEMENT en JSON valide :
 
     // Parse JSON from response (handle potential markdown code blocks)
     const jsonString = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
-    const scores = JSON.parse(jsonString)
+
+    let scores
+    try {
+      scores = JSON.parse(jsonString)
+    } catch {
+      console.error('Failed to parse OpenAI response as JSON:', jsonString)
+      return NextResponse.json(
+        { error: 'Invalid JSON response from AI model' },
+        { status: 502 }
+      )
+    }
 
     return NextResponse.json(scores)
   } catch (error) {

@@ -16,7 +16,23 @@ import { Button } from "@/components/ui/button";
 import { FeaturesCarousel } from "@/components/article/FeaturesCarousel";
 
 // --- PARSEUR MARKDOWN BASIQUE ---
-// Transforme le texte de l'IA en HTML stylisé avec des ancres (id) pour le sommaire
+// Rend le texte avec gras (**text**) de manière sûre via React (pas de dangerouslySetInnerHTML)
+function InlineText({ text }: { text: string }) {
+  const parts = text.split(/(\*\*.*?\*\*)/g);
+  return (
+    <>
+      {parts.map((part, i) =>
+        part.startsWith("**") && part.endsWith("**") ? (
+          <strong key={i}>{part.slice(2, -2)}</strong>
+        ) : (
+          <span key={i}>{part}</span>
+        )
+      )}
+    </>
+  );
+}
+
+// Transforme le texte de l'IA en composants React stylisés avec des ancres (id) pour le sommaire
 function MarkdownRenderer({ content }: { content: string }) {
   return (
     <div className="prose prose-blue max-w-none text-gray-700">
@@ -34,7 +50,7 @@ function MarkdownRenderer({ content }: { content: string }) {
               id={id}
               className="text-2xl font-bold mt-12 mb-6 text-[#152330] scroll-mt-24"
             >
-              {text}
+              <InlineText text={text} />
             </h2>
           );
         }
@@ -46,7 +62,7 @@ function MarkdownRenderer({ content }: { content: string }) {
               key={i}
               className="text-xl font-semibold mt-8 mb-4 text-[#152330]"
             >
-              {line.slice(4)}
+              <InlineText text={line.slice(4)} />
             </h3>
           );
         }
@@ -55,9 +71,7 @@ function MarkdownRenderer({ content }: { content: string }) {
         if (line.startsWith("- ")) {
           return (
             <li key={i} className="ml-6 mb-2 list-disc pl-2">
-              <span
-                dangerouslySetInnerHTML={{ __html: formatBold(line.slice(2)) }}
-              />
+              <InlineText text={line.slice(2)} />
             </li>
           );
         }
@@ -68,16 +82,12 @@ function MarkdownRenderer({ content }: { content: string }) {
         // Paragraphes normaux
         return (
           <p key={i} className="mb-4 leading-relaxed text-[17px]">
-            <span dangerouslySetInnerHTML={{ __html: formatBold(line) }} />
+            <InlineText text={line} />
           </p>
         );
       })}
     </div>
   );
-}
-
-function formatBold(text: string) {
-  return text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
 }
 
 // --- PAGE PRINCIPALE ---
