@@ -29,6 +29,7 @@ interface Trend {
   suggested_format: string;
   status: string;
   created_at: string;
+  user_id: string | null;
 }
 
 interface ScoreResult {
@@ -259,7 +260,7 @@ export default function TrendsPage() {
         ))}
       </div>
 
-      <TrendTable trends={filteredTrends} />
+      <TrendTable trends={filteredTrends} onTrendUpdated={fetchTrends} />
     </div>
   );
 }

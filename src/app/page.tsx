@@ -11,6 +11,10 @@ import {
   AlertTriangle,
   Heart,
   ChevronRight,
+  Bot,
+  Search,
+  Zap,
+  PenTool,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AnimatedSection } from "@/components/landing/AnimatedSection";
@@ -194,6 +198,12 @@ export default function HomePage() {
                 className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
               >
                 Comment ça marche
+              </a>
+              <a
+                href="#automation"
+                className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
+              >
+                Automatisation
               </a>
               <a
                 href="#faq"
@@ -435,6 +445,107 @@ export default function HomePage() {
                   <ArrowRight className="w-5 h-5 ml-2" />
                 </Button>
               </Link>
+            </AnimatedSection>
+          </div>
+        </section>
+
+        {/* ===== AUTOMATION ENGINE ===== */}
+        <section id="automation" className="py-20 md:py-28 bg-[#FAFBFC]">
+          <div className="max-w-6xl mx-auto px-4">
+            <AnimatedSection className="text-center mb-14">
+              <p className="text-sm font-medium text-violet-600 mb-3 tracking-wide uppercase">
+                Moteur d&apos;automatisation
+              </p>
+              <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
+                Du signal faible{" "}
+                <span className="text-violet-600">
+                  &agrave; l&apos;article publi&eacute;
+                </span>
+                , automatiquement
+              </h2>
+              <p className="text-gray-500 max-w-2xl mx-auto">
+                Notre moteur N8N surveille en continu les sources juridiques et d&eacute;tecte les questions &eacute;mergentes RH/paie. Chaque tendance est scor&eacute;e par IA puis transform&eacute;e en article SEO pr&ecirc;t &agrave; publier.
+              </p>
+            </AnimatedSection>
+
+            <FadeInStagger
+              className="grid md:grid-cols-4 gap-6"
+              staggerDelay={150}
+            >
+              <div className="bg-white rounded-2xl p-6 border border-gray-100 hover:border-violet-200 hover:shadow-lg transition-all duration-300 text-center">
+                <div className="w-12 h-12 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center mx-auto mb-4">
+                  <Search className="w-6 h-6" />
+                </div>
+                <h3 className="font-semibold text-gray-900 mb-2">Veille automatique</h3>
+                <p className="text-sm text-gray-500">
+                  Scraping L&eacute;gifrance, PAA Google, forums RH. Chaque jour, de nouvelles questions sont d&eacute;tect&eacute;es.
+                </p>
+              </div>
+
+              <div className="bg-white rounded-2xl p-6 border border-gray-100 hover:border-violet-200 hover:shadow-lg transition-all duration-300 text-center">
+                <div className="w-12 h-12 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center mx-auto mb-4">
+                  <Bot className="w-6 h-6" />
+                </div>
+                <h3 className="font-semibold text-gray-900 mb-2">Scoring IA</h3>
+                <p className="text-sm text-gray-500">
+                  Chaque question est scor&eacute;e sur 3 crit&egrave;res : nouveaut&eacute;, pertinence PayFit et volume de recherche.
+                </p>
+              </div>
+
+              <div className="bg-white rounded-2xl p-6 border border-gray-100 hover:border-violet-200 hover:shadow-lg transition-all duration-300 text-center">
+                <div className="w-12 h-12 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center mx-auto mb-4">
+                  <PenTool className="w-6 h-6" />
+                </div>
+                <h3 className="font-semibold text-gray-900 mb-2">G&eacute;n&eacute;ration SEO</h3>
+                <p className="text-sm text-gray-500">
+                  Un article de ~1000 mots est g&eacute;n&eacute;r&eacute; avec structure H1/H2, FAQ, sources juridiques et CTA PayFit.
+                </p>
+              </div>
+
+              <div className="bg-white rounded-2xl p-6 border border-gray-100 hover:border-violet-200 hover:shadow-lg transition-all duration-300 text-center">
+                <div className="w-12 h-12 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center mx-auto mb-4">
+                  <Zap className="w-6 h-6" />
+                </div>
+                <h3 className="font-semibold text-gray-900 mb-2">Publication</h3>
+                <p className="text-sm text-gray-500">
+                  Review compliance, puis publication en un clic. Optimis&eacute; GEO pour les AI Overviews.
+                </p>
+              </div>
+            </FadeInStagger>
+
+            {/* Pipeline visual */}
+            <AnimatedSection variant="fadeUp" delay={400}>
+              <div className="mt-12 bg-white rounded-2xl border border-gray-100 p-8 shadow-sm">
+                <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm">
+                  <div className="flex items-center gap-2 text-violet-600 font-medium">
+                    <div className="w-8 h-8 rounded-full bg-violet-100 flex items-center justify-center">
+                      <Search className="w-4 h-4" />
+                    </div>
+                    L&eacute;gifrance + PAA
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-gray-300 hidden md:block" />
+                  <div className="flex items-center gap-2 text-violet-600 font-medium">
+                    <div className="w-8 h-8 rounded-full bg-violet-100 flex items-center justify-center">
+                      <Bot className="w-4 h-4" />
+                    </div>
+                    Scoring (3 crit&egrave;res)
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-gray-300 hidden md:block" />
+                  <div className="flex items-center gap-2 text-violet-600 font-medium">
+                    <div className="w-8 h-8 rounded-full bg-violet-100 flex items-center justify-center">
+                      <PenTool className="w-4 h-4" />
+                    </div>
+                    Brief + Article SEO
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-gray-300 hidden md:block" />
+                  <div className="flex items-center gap-2 text-green-600 font-medium">
+                    <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+                      <CheckCircle className="w-4 h-4" />
+                    </div>
+                    Publi&eacute; sur le blog
+                  </div>
+                </div>
+              </div>
             </AnimatedSection>
           </div>
         </section>

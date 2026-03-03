@@ -12,7 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Plus, ExternalLink, Trash2, RefreshCw, Pencil, RotateCw } from "lucide-react";
+import { FileText, Plus, ExternalLink, Trash2, RefreshCw, Pencil, RotateCw, Bot } from "lucide-react";
 import Link from "next/link";
 
 interface Article {
@@ -23,6 +23,8 @@ interface Article {
   published_at: string | null;
   created_at: string;
   word_count: number | null;
+  user_id: string | null;
+  trend_id: string | null;
 }
 
 export default function ArticlesPage() {
@@ -148,11 +150,24 @@ export default function ArticlesPage() {
                 {articles.map((article) => (
                   <TableRow key={article.id}>
                     <TableCell className="font-medium">
-                      <div className="truncate max-w-[300px] text-[#152330]">
-                        {article.title}
+                      <div className="flex items-center gap-2">
+                        <div className="truncate max-w-[260px] text-[#152330]">
+                          {article.title}
+                        </div>
+                        {!article.user_id && (
+                          <Badge variant="outline" className="shrink-0 text-[10px] px-1.5 py-0 border-violet-200 bg-violet-50 text-violet-600 gap-1">
+                            <Bot className="w-3 h-3" />
+                            N8N
+                          </Badge>
+                        )}
                       </div>
                       <div className="text-xs text-gray-400 truncate max-w-[300px]">
                         /articles/{article.slug}
+                        {article.trend_id && (
+                          <Link href="/dashboard/trends" className="ml-2 text-violet-500 hover:text-violet-700">
+                            ← trend liée
+                          </Link>
+                        )}
                       </div>
                     </TableCell>
                     <TableCell>
