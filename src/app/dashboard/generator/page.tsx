@@ -227,7 +227,7 @@ function GeneratorContent() {
             : "Générateur d\u0027articles"}
         </h1>
         <div className="flex gap-2">
-          {[1, 2, 3].map((s) => (
+          {[1, 2].map((s) => (
             <div
               key={s}
               className={`flex items-center gap-1.5 text-sm ${
@@ -246,11 +246,7 @@ function GeneratorContent() {
                 {step > s ? <Check className="w-3 h-3" /> : s}
               </div>
               <span className="hidden sm:inline">
-                {s === 1
-                  ? "Configuration"
-                  : s === 2
-                    ? "Génération"
-                    : "Compliance"}
+                {s === 1 ? "Configuration" : "Relecture & Compliance"}
               </span>
             </div>
           ))}
@@ -376,155 +372,145 @@ function GeneratorContent() {
         </div>
       )}
 
-      {/* Étape 2 — Génération */}
+      {/* Étape 2 — Relecture & Compliance */}
       {step === 2 && article && (
         <div className="space-y-4">
-          <Card className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h3 className="font-semibold flex items-center gap-2">
-                  <FileText className="w-4 h-4" />
-                  {article.title}
-                </h3>
-                <p className="text-sm text-gray-500">
-                  Slug : /articles/{article.slug}
-                </p>
-              </div>
-              <Badge
-                variant={
-                  wordCount >= 800 && wordCount <= 1200
-                    ? "default"
-                    : "destructive"
-                }
-              >
-                {wordCount} mots
-              </Badge>
-            </div>
-            <Textarea
-              value={editedContent}
-              onChange={(e) => setEditedContent(e.target.value)}
-              rows={20}
-              className="font-mono text-sm"
-            />
-          </Card>
-
-          {/* Preview */}
-          <Card className="p-6">
-            <h3 className="font-semibold flex items-center gap-2 mb-4">
-              <Eye className="w-4 h-4" />
-              Aperçu
-            </h3>
-            <div className="prose prose-sm max-w-none">
-              {editedContent.split("\n").map((line, i) => {
-                if (line.startsWith("# "))
-                  return (
-                    <h1 key={i} className="text-2xl font-bold mb-2">
-                      {line.slice(2)}
-                    </h1>
-                  );
-                if (line.startsWith("## "))
-                  return (
-                    <h2 key={i} className="text-xl font-semibold mt-6 mb-2">
-                      {line.slice(3)}
-                    </h2>
-                  );
-                if (line.startsWith("### "))
-                  return (
-                    <h3 key={i} className="text-lg font-medium mt-4 mb-1">
-                      {line.slice(4)}
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            {/* Colonne gauche : Article (2/3) */}
+            <div className="xl:col-span-2 space-y-4">
+              <Card className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 className="font-semibold flex items-center gap-2">
+                      <FileText className="w-4 h-4" />
+                      {article.title}
                     </h3>
-                  );
-                if (line.startsWith("- "))
-                  return (
-                    <li key={i} className="ml-4">
-                      {line.slice(2)}
-                    </li>
-                  );
-                if (line.trim() === "") return <br key={i} />;
-                return (
-                  <p key={i} className="mb-2 text-gray-700">
-                    {line}
-                  </p>
-                );
-              })}
-            </div>
-          </Card>
+                    <p className="text-sm text-gray-500">
+                      Slug : /articles/{article.slug}
+                    </p>
+                  </div>
+                  <Badge
+                    variant={
+                      wordCount >= 800 && wordCount <= 1200
+                        ? "default"
+                        : "destructive"
+                    }
+                  >
+                    {wordCount} mots
+                  </Badge>
+                </div>
+                <Textarea
+                  value={editedContent}
+                  onChange={(e) => setEditedContent(e.target.value)}
+                  rows={20}
+                  className="font-mono text-sm"
+                />
+              </Card>
 
-          <div className="flex gap-3">
-            <Button
-              variant="outline"
-              onClick={() => setStep(1)}
-              className="cursor-pointer"
-            >
-              Retour
-            </Button>
-            <Button
-              onClick={() => setStep(3)}
-              className="bg-[#0066CC] hover:bg-[#004C99] text-white cursor-pointer"
-            >
-              Vérification compliance
-              <CheckCircle className="w-4 h-4 ml-2" />
-            </Button>
+              {/* Preview */}
+              <Card className="p-6">
+                <h3 className="font-semibold flex items-center gap-2 mb-4">
+                  <Eye className="w-4 h-4" />
+                  Aperçu
+                </h3>
+                <div className="prose prose-sm max-w-none">
+                  {editedContent.split("\n").map((line, i) => {
+                    if (line.startsWith("# "))
+                      return (
+                        <h1 key={i} className="text-2xl font-bold mb-2">
+                          {line.slice(2)}
+                        </h1>
+                      );
+                    if (line.startsWith("## "))
+                      return (
+                        <h2 key={i} className="text-xl font-semibold mt-6 mb-2">
+                          {line.slice(3)}
+                        </h2>
+                      );
+                    if (line.startsWith("### "))
+                      return (
+                        <h3 key={i} className="text-lg font-medium mt-4 mb-1">
+                          {line.slice(4)}
+                        </h3>
+                      );
+                    if (line.startsWith("- "))
+                      return (
+                        <li key={i} className="ml-4">
+                          {line.slice(2)}
+                        </li>
+                      );
+                    if (line.trim() === "") return <br key={i} />;
+                    return (
+                      <p key={i} className="mb-2 text-gray-700">
+                        {line}
+                      </p>
+                    );
+                  })}
+                </div>
+              </Card>
+            </div>
+
+            {/* Colonne droite : Compliance (1/3) */}
+            <div className="space-y-4">
+              <Card className="p-6 sticky top-6">
+                <h3 className="font-semibold flex items-center gap-2 mb-4">
+                  <CheckCircle className="w-4 h-4" />
+                  Grille compliance
+                </h3>
+                <ComplianceGrid onStatusChange={setAllCompliant} />
+
+                <div className="mt-6 space-y-2">
+                  {published ? (
+                    <div className="p-4 bg-green-50 border border-green-200 rounded-lg text-center">
+                      <CheckCircle className="w-8 h-8 text-[#2E7D32] mx-auto mb-2" />
+                      <p className="font-semibold text-[#2E7D32] text-sm">
+                        Article publié !
+                      </p>
+                      <p className="text-xs text-gray-600 mt-1">
+                        /articles/{article.slug}
+                      </p>
+                    </div>
+                  ) : (
+                    <>
+                      <Button
+                        onClick={() => handlePublish(false)}
+                        disabled={publishing || !allCompliant}
+                        className="w-full bg-[#2E7D32] hover:bg-[#1B5E20] text-white cursor-pointer"
+                      >
+                        {publishing ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Publication...
+                          </>
+                        ) : (
+                          <>
+                            <Check className="w-4 h-4 mr-2" />
+                            Publier l&apos;article
+                          </>
+                        )}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => handlePublish(true)}
+                        disabled={publishing}
+                        className="w-full cursor-pointer"
+                      >
+                        Sauvegarder en brouillon
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </Card>
+
+              <Button
+                variant="outline"
+                onClick={() => setStep(1)}
+                className="w-full cursor-pointer"
+              >
+                Retour à la configuration
+              </Button>
+            </div>
           </div>
-        </div>
-      )}
-
-      {/* Étape 3 — Compliance */}
-      {step === 3 && article && (
-        <div className="space-y-4">
-          <Card className="p-6">
-            <h3 className="font-semibold mb-4">
-              Grille de vérification compliance
-            </h3>
-            <ComplianceGrid onStatusChange={setAllCompliant} />
-          </Card>
-
-          {published ? (
-            <Card className="p-6 bg-green-50 border-green-200 text-center">
-              <CheckCircle className="w-10 h-10 text-[#2E7D32] mx-auto mb-2" />
-              <h3 className="font-semibold text-[#2E7D32]">
-                Article publié avec succès !
-              </h3>
-              <p className="text-sm text-gray-600 mt-1">
-                Accessible sur /articles/{article.slug}
-              </p>
-            </Card>
-          ) : (
-            <div className="flex gap-3">
-              <Button
-                variant="outline"
-                onClick={() => setStep(2)}
-                className="cursor-pointer"
-              >
-                Retour
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => handlePublish(true)}
-                disabled={publishing}
-                className="cursor-pointer"
-              >
-                Sauvegarder en brouillon
-              </Button>
-              <Button
-                onClick={() => handlePublish(false)}
-                disabled={publishing || !allCompliant}
-                className="bg-[#2E7D32] hover:bg-[#1B5E20] text-white cursor-pointer"
-              >
-                {publishing ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Publication...
-                  </>
-                ) : (
-                  <>
-                    <Check className="w-4 h-4 mr-2" />
-                    Publier l&apos;article
-                  </>
-                )}
-              </Button>
-            </div>
-          )}
         </div>
       )}
     </div>
