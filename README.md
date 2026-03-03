@@ -1,39 +1,36 @@
-# hackaton-payfit
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-Stratégie SEO de PayFit.
+## Getting Started
 
-# Problématique :
+First, run the development server:
 
-- Problématique 1 — Production de contenu SEO en masse via l'IA, sans sacrifier la qualité ni l'image d'expert paie/RH de PayFit.
-- Problématique 2 — Détection automatique de questions/tendances émergentes en RH/paie pour créer du contenu SEO avant les concurrents (Factorial, Lucca, Cegid, Sage).
-- Problématique 3 — Utilisation du no-code/vibecoding pour créer des outils interactifs (simulateurs, calculateurs) qui répondent à des intentions de recherche, sans dépendre des équipes dev.
+```bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
+```
 
-# Résultats attendus :
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-- Créer du contenu de masse avec l'IA, sans perdre en crédibilité sur le sujet "paie et RH".
-- Détecter les questions émergentes avant la concurrence sur le sujet "paie et RH".
-- Utiliser des outils de no-code pour réduire la dépendance aux équipes de dev.
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-# Livrable par jour :
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-- Jour 1 : cadrage + stratégie
-- Jour 2 : contenu & méthode
-- Jour 3 : POC
-- Jour 4 : solution finale
+## Learn More
 
-# Solutions :
+To learn more about Next.js, take a look at the following resources:
 
-- Veille IA automatisée (N8N + Chat GPT API) :
-  Un workflow qui détecte les tendances émergentes en RH/paie via le scraping de sources stratégiques (People Also Ask, forums RH, Légifrance, Journal Officiel) et les score par potentiel SEO.
-- Content Engine (Chat GPT API + grille compliance) :
-  Un générateur d’articles SEO avec prompt documenté, optimisé pour le tone of voice PayFit, avec vérification compliance/légal intégrée et structure GEO-ready (FAQ, données structurées, définitions claires).
-- Quiz interactif de conformité paie (Next.js) :
-  Un outil public « Gérez-vous correctement votre paie ? » ou « Êtes-vous en règle avec vos obligations employeur ? » qui agit comme pièce centrale d’un cluster SEO, lead magnet, et outil de qualification de prospects. Intègre des mini-calculateurs (congés payés, heures de travail).
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-# Stack :
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-- Make ou N8N obligatoire
-- Lovable pas imposé
-- Next.js
-- Supabase
-- Vercel
+## Deploy on Vercel
+
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
