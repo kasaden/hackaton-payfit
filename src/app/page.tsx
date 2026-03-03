@@ -506,7 +506,6 @@ export default function HomePage() {
                   rel="noopener noreferrer"
                 >
                   <Button
-                    variant="outline"
                     size="lg"
                     className="border-2 border-white/30 text-white hover:bg-white/10 px-8 py-6 text-lg rounded-xl cursor-pointer"
                   >
