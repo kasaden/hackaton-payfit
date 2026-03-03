@@ -17,6 +17,8 @@ import {
   Target,
   Zap,
   Shield,
+  PenTool,
+  ChevronRight,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -226,6 +228,108 @@ export default function PresentationPage() {
               <p className="text-xs text-gray-400 mt-0.5">{t.role}</p>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* ===== MOTEUR D'AUTOMATISATION ===== */}
+      <section>
+        <div className="mb-10">
+          <p className="text-sm font-medium text-violet-600 mb-2 tracking-wide uppercase">
+            Moteur d&apos;automatisation
+          </p>
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
+            Du signal faible{" "}
+            <span className="text-violet-600">à l&apos;article publié</span>,
+            automatiquement
+          </h2>
+          <p className="text-gray-500 max-w-2xl">
+            Notre moteur N8N surveille en continu les sources juridiques et
+            détecte les questions émergentes RH/paie. Chaque tendance est scorée
+            par IA puis transformée en article SEO prêt à publier.
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-4 gap-5">
+          <div className="bg-white rounded-2xl p-6 border border-gray-100 hover:border-violet-200 hover:shadow-md transition-all duration-300 text-center">
+            <div className="w-12 h-12 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center mx-auto mb-4">
+              <Search className="w-6 h-6" />
+            </div>
+            <h3 className="font-semibold text-gray-900 mb-2">
+              Veille automatique
+            </h3>
+            <p className="text-sm text-gray-500">
+              Scraping Légifrance, PAA Google, forums RH. Chaque jour, de
+              nouvelles questions sont détectées.
+            </p>
+          </div>
+
+          <div className="bg-white rounded-2xl p-6 border border-gray-100 hover:border-violet-200 hover:shadow-md transition-all duration-300 text-center">
+            <div className="w-12 h-12 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center mx-auto mb-4">
+              <Bot className="w-6 h-6" />
+            </div>
+            <h3 className="font-semibold text-gray-900 mb-2">Scoring IA</h3>
+            <p className="text-sm text-gray-500">
+              Chaque question est scorée sur 3 critères : nouveauté, pertinence
+              PayFit et volume de recherche.
+            </p>
+          </div>
+
+          <div className="bg-white rounded-2xl p-6 border border-gray-100 hover:border-violet-200 hover:shadow-md transition-all duration-300 text-center">
+            <div className="w-12 h-12 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center mx-auto mb-4">
+              <PenTool className="w-6 h-6" />
+            </div>
+            <h3 className="font-semibold text-gray-900 mb-2">
+              Génération SEO
+            </h3>
+            <p className="text-sm text-gray-500">
+              Un article de ~1000 mots est généré avec structure H1/H2, FAQ,
+              sources juridiques et CTA PayFit.
+            </p>
+          </div>
+
+          <div className="bg-white rounded-2xl p-6 border border-gray-100 hover:border-violet-200 hover:shadow-md transition-all duration-300 text-center">
+            <div className="w-12 h-12 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center mx-auto mb-4">
+              <Zap className="w-6 h-6" />
+            </div>
+            <h3 className="font-semibold text-gray-900 mb-2">Publication</h3>
+            <p className="text-sm text-gray-500">
+              Review compliance, puis publication en un clic. Optimisé GEO pour
+              les AI Overviews.
+            </p>
+          </div>
+        </div>
+
+        {/* Pipeline visual */}
+        <div className="mt-8 bg-white rounded-2xl border border-gray-100 p-8 shadow-sm">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm">
+            <div className="flex items-center gap-2 text-violet-600 font-medium">
+              <div className="w-8 h-8 rounded-full bg-violet-100 flex items-center justify-center">
+                <Search className="w-4 h-4" />
+              </div>
+              Légifrance + PAA
+            </div>
+            <ChevronRight className="w-5 h-5 text-gray-300 hidden md:block" />
+            <div className="flex items-center gap-2 text-violet-600 font-medium">
+              <div className="w-8 h-8 rounded-full bg-violet-100 flex items-center justify-center">
+                <Bot className="w-4 h-4" />
+              </div>
+              Scoring (3 critères)
+            </div>
+            <ChevronRight className="w-5 h-5 text-gray-300 hidden md:block" />
+            <div className="flex items-center gap-2 text-violet-600 font-medium">
+              <div className="w-8 h-8 rounded-full bg-violet-100 flex items-center justify-center">
+                <PenTool className="w-4 h-4" />
+              </div>
+              Brief + Article SEO
+            </div>
+            <ChevronRight className="w-5 h-5 text-gray-300 hidden md:block" />
+            <div className="flex items-center gap-2 text-green-600 font-medium">
+              <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+                <CheckCircle className="w-4 h-4" />
+              </div>
+              Publié sur le blog
+            </div>
+          </div>
         </div>
       </section>
 

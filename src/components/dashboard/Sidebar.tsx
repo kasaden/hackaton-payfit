@@ -11,6 +11,7 @@ import {
   PieChart,
   Presentation,
   LogOut,
+  ScrollText,
 } from "lucide-react";
 import Image from "next/image";
 import { Separator } from "@/components/ui/separator";
@@ -25,6 +26,7 @@ const navItems = [
     href: "/dashboard/articles",
     icon: FileText,
   },
+  { href: "/dashboard/prompts", label: "Prompts", icon: ScrollText },
   { href: "/dashboard/benchmark", label: "Benchmark", icon: BarChart3 },
   {
     href: "/dashboard/quiz-analytics",

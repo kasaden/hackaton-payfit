@@ -3,6 +3,7 @@ import { createServiceClient, createRouteClient } from '@/lib/supabase/server'
 import { openai } from '@/lib/openai'
 import { checkRateLimit } from '@/lib/rate-limit'
 import { isValidOrigin } from '@/lib/csrf'
+import { getPromptTemplate, interpolateTemplate } from '@/lib/prompts'
 
 function slugify(text: string): string {
   return text
@@ -39,7 +40,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { keyword_primary, keywords_secondary, icp_target, trend_id, custom_prompt, article_id } = body
+    const { keyword_primary, keywords_secondary, icp_target, trend_id, custom_prompt, article_id, template_slug } = body
 
     if (!keyword_primary || !keywords_secondary || !icp_target) {
       return NextResponse.json(
@@ -69,40 +70,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'trend_id must be a valid UUID' }, { status: 400 })
     }
 
-    const systemPrompt = `Tu es un rédacteur SEO expert en droit social et paie française, travaillant pour PayFit, le leader français de la gestion de paie automatisée pour TPE/PME. Tu rédiges des articles de blog destinés au site payfit.com/fr/fiches-pratiques/.
+    // Fetch prompt template from DB (fallback to hardcoded if DB fails)
+    const FALLBACK_SYSTEM_PROMPT = `Tu es un rédacteur SEO expert en droit social et paie française, travaillant pour PayFit, le leader français de la gestion de paie automatisée pour TPE/PME. Tu rédiges des articles de blog destinés au site payfit.com/fr/fiches-pratiques/.
 Ton style est : professionnel mais accessible, pédagogique sans être condescendant, concret et actionnable. Tu t'adresses à des dirigeants de TPE (1-9 salariés) et des responsables RH de PME (10-50 salariés). Tu cites toujours tes sources légales (articles du Code du travail, directives européennes, textes URSSAF). Tu n'inventes jamais de donnée chiffrée.`
 
-    // Si aucun prompt custom n'est fourni, on garde celui par défaut (qui servira de fallback)
-    const defaultUserPromptTemplate = `Rédige un article SEO de 800 à 1200 mots sur le sujet suivant :
-**Mot-clé principal** : {{keyword_primary}}
-**Mots-clés secondaires** : {{keywords_secondary}}
-**ICP cible** : {{icp_target}}
+    const template = await getPromptTemplate(template_slug || 'seo_standard')
+    const systemPrompt = template?.system_prompt || FALLBACK_SYSTEM_PROMPT
 
-Structure obligatoire :
-1. Un titre H1 (en # markdown) incluant le mot-clé principal et l'année 2026
-2. Une introduction de 2-3 phrases posant le problème et les enjeux
-3. Une définition claire du concept (optimisée pour Google Featured Snippet / AI Overview)
-4. 3-4 sous-parties H2 (en ## markdown) avec du contenu actionnable et des impacts paie concrets
-5. Une section "Comment PayFit vous accompagne" (CTA soft, pas commercial agressif)
-6. Une FAQ avec 3-4 questions en format ## FAQ puis **Q:** / R: (optimisées pour les PAA Google)
-7. Chaque affirmation juridique doit citer la source entre parenthèses
-8. Intègre des données chiffrées quand disponibles (seuils, taux, dates)
-
-Règles GEO (Generative Engine Optimization) :
-- Commence chaque section par une réponse directe
-- Fournis des données chiffrées sourcées
-- Termine la FAQ par une question qui ramène vers PayFit
-
-Réponds uniquement avec l'article en markdown. Pas d'introduction ni de commentaire autour.`
-
-    // On utilise le custom_prompt s'il existe, sinon le fallback
-    let userPrompt = custom_prompt || defaultUserPromptTemplate
-
-    // Remplacement dynamique des variables du template
-    userPrompt = userPrompt
-      .replace(/{{keyword_primary}}/g, keyword_primary)
-      .replace(/{{keywords_secondary}}/g, keywords_secondary.join(', '))
-      .replace(/{{icp_target}}/g, icp_target)
+    // custom_prompt from the generator UI overrides the DB template
+    const userPromptTemplate = custom_prompt || template?.user_prompt_template || custom_prompt
+    const userPrompt = interpolateTemplate(userPromptTemplate || '', {
+      keyword_primary,
+      keywords_secondary: keywords_secondary.join(', '),
+      icp_target,
+    })
 
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o-mini',

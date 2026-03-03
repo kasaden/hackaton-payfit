@@ -27,51 +27,15 @@ import {
   PenTool,
 } from "lucide-react";
 
-// --- DÉFINITION DES TEMPLATES DE PROMPTS ---
-const PROMPT_TEMPLATES = [
-  {
-    id: "standard-seo",
-    name: "Article SEO Standard (Long format)",
-    content: `Rédige un article SEO de 800 à 1200 mots sur le sujet suivant :
-**Mot-clé principal** : {{keyword_primary}}
-**Mots-clés secondaires** : {{keywords_secondary}}
-**ICP cible** : {{icp_target}}
-
-Structure obligatoire :
-1. Un titre H1 (en # markdown) incluant le mot-clé principal et l'année 2026
-2. Une introduction de 2-3 phrases posant le problème et les enjeux
-3. Une définition claire du concept (optimisée pour Google Featured Snippet / AI Overview)
-4. 3-4 sous-parties H2 (en ## markdown) avec du contenu actionnable et des impacts paie concrets
-5. Une section "Comment PayFit vous accompagne" (CTA soft, pas commercial agressif)
-6. Une FAQ avec 3-4 questions en format ## FAQ puis **Q:** / R: (optimisées pour les PAA Google)
-7. Chaque affirmation juridique doit citer la source entre parenthèses
-8. Intègre des données chiffrées quand disponibles (seuils, taux, dates)
-
-Règles GEO (Generative Engine Optimization) :
-- Commence chaque section par une réponse directe
-- Fournis des données chiffrées sourcées
-- Termine la FAQ par une question qui ramène vers PayFit
-
-Réponds uniquement avec l'article en markdown. Pas d'introduction ni de commentaire autour.`,
-  },
-  {
-    id: "news-breve",
-    name: "Brève Actualité Paie (Format court)",
-    content: `Rédige une actualité "Flash Paie" de 400 mots maximum sur le sujet suivant :
-**Sujet principal** : {{keyword_primary}}
-**Mots-clés secondaires** : {{keywords_secondary}}
-**Cible** : {{icp_target}}
-
-Structure :
-1. Titre H1 percutant incluant la date ou l'année
-2. L'essentiel de l'information en gras (Quoi, quand, pour qui)
-3. Un H2 "Impacts concrets sur la paie"
-4. Un H2 "Ce qu'il faut faire dans PayFit"
-5. Cite les sources légales.
-
-Ton ton doit être direct et urgent. Réponds uniquement en markdown sans intro.`,
-  },
-];
+interface PromptTemplate {
+  id: string;
+  slug: string;
+  name: string;
+  system_prompt: string;
+  user_prompt_template: string;
+  variables: string[];
+  is_default: boolean;
+}
 
 function GeneratorContent() {
   const searchParams = useSearchParams();
@@ -84,11 +48,10 @@ function GeneratorContent() {
   const [keywordsSecondary, setKeywordsSecondary] = useState("");
   const [icpTarget, setIcpTarget] = useState("ICP 2");
 
-  // --- NOUVEAUX STATES POUR LES PROMPTS ---
-  const [selectedTemplateId, setSelectedTemplateId] = useState(
-    PROMPT_TEMPLATES[0].id,
-  );
-  const [customPrompt, setCustomPrompt] = useState(PROMPT_TEMPLATES[0].content);
+  // --- PROMPT TEMPLATES FROM DB ---
+  const [promptTemplates, setPromptTemplates] = useState<PromptTemplate[]>([]);
+  const [selectedTemplateSlug, setSelectedTemplateSlug] = useState("");
+  const [customPrompt, setCustomPrompt] = useState("");
 
   const [generating, setGenerating] = useState(false);
   const [article, setArticle] = useState<{
@@ -103,6 +66,23 @@ function GeneratorContent() {
   const [publishing, setPublishing] = useState(false);
   const [published, setPublished] = useState(false);
   const [loadingArticle, setLoadingArticle] = useState(false);
+
+  // Fetch prompt templates from Supabase
+  useEffect(() => {
+    const supabase = createClient();
+    supabase
+      .from("prompt_templates")
+      .select("*")
+      .order("is_default", { ascending: false })
+      .then(({ data }) => {
+        if (data && data.length > 0) {
+          setPromptTemplates(data);
+          const defaultTemplate = data.find((t: PromptTemplate) => t.is_default) || data[0];
+          setSelectedTemplateSlug(defaultTemplate.slug);
+          setCustomPrompt(defaultTemplate.user_prompt_template);
+        }
+      });
+  }, []);
 
   // Mode édition : charger un article existant
   useEffect(() => {
@@ -159,11 +139,11 @@ function GeneratorContent() {
   }, [trendId, articleId]);
 
   // Mettre à jour le texte du prompt quand on change de template
-  const handleTemplateChange = (templateId: string) => {
-    setSelectedTemplateId(templateId);
-    const template = PROMPT_TEMPLATES.find((t) => t.id === templateId);
+  const handleTemplateChange = (slug: string) => {
+    setSelectedTemplateSlug(slug);
+    const template = promptTemplates.find((t) => t.slug === slug);
     if (template) {
-      setCustomPrompt(template.content);
+      setCustomPrompt(template.user_prompt_template);
     }
   };
 
@@ -188,6 +168,7 @@ function GeneratorContent() {
           icp_target: icpTarget,
           trend_id: trendId || undefined,
           custom_prompt: customPrompt,
+          template_slug: selectedTemplateSlug || undefined,
           // Si on re-génère, on envoie l'article_id pour UPDATE au lieu d'INSERT
           article_id: isRegenerate && article ? article.id : undefined,
         }),
@@ -362,15 +343,15 @@ function GeneratorContent() {
             <div className="space-y-2">
               <Label>Modèle de prompt</Label>
               <Select
-                value={selectedTemplateId}
+                value={selectedTemplateSlug}
                 onValueChange={handleTemplateChange}
               >
                 <SelectTrigger className="bg-white">
-                  <SelectValue />
+                  <SelectValue placeholder="Chargement..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {PROMPT_TEMPLATES.map((template) => (
-                    <SelectItem key={template.id} value={template.id}>
+                  {promptTemplates.map((template) => (
+                    <SelectItem key={template.slug} value={template.slug}>
                       {template.name}
                     </SelectItem>
                   ))}

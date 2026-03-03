@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { openai } from '@/lib/openai'
+import { getPromptTemplate, interpolateTemplate } from '@/lib/prompts'
 
 function slugify(text: string): string {
   return text
@@ -97,7 +98,7 @@ export async function POST(request: NextRequest) {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function handleGenerateArticle(supabase: any, data: any) {
-  const { keyword_primary, keywords_secondary, icp_target, trend_id } = data
+  const { keyword_primary, keywords_secondary, icp_target, trend_id, template_slug } = data
 
   if (!keyword_primary || !keywords_secondary || !icp_target) {
     return NextResponse.json(
@@ -106,17 +107,14 @@ async function handleGenerateArticle(supabase: any, data: any) {
     )
   }
 
-  const systemPrompt = `Tu es un rédacteur SEO expert en droit social et paie française, travaillant pour PayFit, le leader français de la gestion de paie automatisée pour TPE/PME. Tu rédiges des articles de blog destinés au site payfit.com/fr/fiches-pratiques/.
+  // Fetch prompt template from DB (fallback to hardcoded if DB fails)
+  const FALLBACK_SYSTEM_PROMPT = `Tu es un rédacteur SEO expert en droit social et paie française, travaillant pour PayFit, le leader français de la gestion de paie automatisée pour TPE/PME. Tu rédiges des articles de blog destinés au site payfit.com/fr/fiches-pratiques/.
 Ton style est : professionnel mais accessible, pédagogique sans être condescendant, concret et actionnable. Tu t'adresses à des dirigeants de TPE (1-9 salariés) et des responsables RH de PME (10-50 salariés). Tu cites toujours tes sources légales (articles du Code du travail, directives européennes, textes URSSAF). Tu n'inventes jamais de donnée chiffrée.`
 
-  const secondaryKw = Array.isArray(keywords_secondary)
-    ? keywords_secondary.join(', ')
-    : keywords_secondary
-
-  const userPrompt = `Rédige un article SEO de 800 à 1200 mots sur le sujet suivant :
-**Mot-clé principal** : ${keyword_primary}
-**Mots-clés secondaires** : ${secondaryKw}
-**ICP cible** : ${icp_target}
+  const FALLBACK_USER_PROMPT = `Rédige un article SEO de 800 à 1200 mots sur le sujet suivant :
+**Mot-clé principal** : {{keyword_primary}}
+**Mots-clés secondaires** : {{keywords_secondary}}
+**ICP cible** : {{icp_target}}
 
 Structure obligatoire :
 1. Un titre H1 (en # markdown) incluant le mot-clé principal et l'année 2026
@@ -134,6 +132,18 @@ Règles GEO (Generative Engine Optimization) :
 - Termine la FAQ par une question qui ramène vers PayFit
 
 Réponds uniquement avec l'article en markdown. Pas d'introduction ni de commentaire autour.`
+
+  const secondaryKw = Array.isArray(keywords_secondary)
+    ? keywords_secondary.join(', ')
+    : keywords_secondary
+
+  const template = await getPromptTemplate(template_slug || 'seo_standard')
+  const systemPrompt = template?.system_prompt || FALLBACK_SYSTEM_PROMPT
+  const userPrompt = interpolateTemplate(template?.user_prompt_template || FALLBACK_USER_PROMPT, {
+    keyword_primary,
+    keywords_secondary: secondaryKw,
+    icp_target,
+  })
 
   const completion = await openai.chat.completions.create({
     model: 'gpt-4o-mini',

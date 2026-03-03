@@ -3,6 +3,7 @@ import { createServiceClient, createRouteClient } from '@/lib/supabase/server'
 import { openai } from '@/lib/openai'
 import { isValidOrigin } from '@/lib/csrf'
 import { checkRateLimit } from '@/lib/rate-limit'
+import { getPromptTemplate, interpolateTemplate } from '@/lib/prompts'
 
 function slugify(text: string): string {
   return text
@@ -59,15 +60,16 @@ export async function POST(request: NextRequest) {
     const keyword_primary = trend.question.split(':')[0]?.trim() || trend.question
     const keywords_secondary = [trend.source, trend.icp_target, 'paie 2026', 'obligations employeur']
 
-    const systemPrompt = `Tu es un rédacteur SEO expert en droit social et paie française, travaillant pour PayFit, le leader français de la gestion de paie automatisée pour TPE/PME. Tu rédiges des articles de blog destinés au site payfit.com/fr/fiches-pratiques/.
+    // Fetch prompt template from DB (fallback to hardcoded if DB fails)
+    const FALLBACK_SYSTEM_PROMPT = `Tu es un rédacteur SEO expert en droit social et paie française, travaillant pour PayFit, le leader français de la gestion de paie automatisée pour TPE/PME. Tu rédiges des articles de blog destinés au site payfit.com/fr/fiches-pratiques/.
 Ton style est : professionnel mais accessible, pédagogique sans être condescendant, concret et actionnable. Tu t'adresses à des dirigeants de TPE (1-9 salariés) et des responsables RH de PME (10-50 salariés). Tu cites toujours tes sources légales (articles du Code du travail, directives européennes, textes URSSAF). Tu n'inventes jamais de donnée chiffrée.`
 
-    const userPrompt = `Rédige un article SEO de 800 à 1200 mots sur le sujet suivant :
-**Mot-clé principal** : ${keyword_primary}
-**Mots-clés secondaires** : ${keywords_secondary.join(', ')}
-**ICP cible** : ${trend.icp_target || 'ICP 1+2'}
+    const FALLBACK_USER_PROMPT = `Rédige un article SEO de 800 à 1200 mots sur le sujet suivant :
+**Mot-clé principal** : {{keyword_primary}}
+**Mots-clés secondaires** : {{keywords_secondary}}
+**ICP cible** : {{icp_target}}
 
-Contexte : ${trend.signal || ''}
+Contexte : {{signal}}
 
 Structure obligatoire :
 1. Un titre H1 (en # markdown) incluant le mot-clé principal et l'année 2026
@@ -85,6 +87,16 @@ Règles GEO (Generative Engine Optimization) :
 - Termine la FAQ par une question qui ramène vers PayFit
 
 Réponds uniquement avec l'article en markdown. Pas d'introduction ni de commentaire autour.`
+
+    const template = await getPromptTemplate('auto_trend')
+    const systemPrompt = template?.system_prompt || FALLBACK_SYSTEM_PROMPT
+    const userPrompt = interpolateTemplate(template?.user_prompt_template || FALLBACK_USER_PROMPT, {
+      keyword_primary,
+      keywords_secondary: keywords_secondary.join(', '),
+      icp_target: trend.icp_target || 'ICP 1+2',
+      signal: trend.signal || '',
+      source: trend.source || '',
+    })
 
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o-mini',

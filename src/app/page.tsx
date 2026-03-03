@@ -11,10 +11,8 @@ import {
   AlertTriangle,
   Heart,
   ChevronRight,
-  Bot,
-  Search,
-  Zap,
-  PenTool,
+  X,
+  Minus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AnimatedSection } from "@/components/landing/AnimatedSection";
@@ -154,6 +152,80 @@ const steps = [
   },
 ];
 
+/* ---------- Benchmark Data ---------- */
+const benchmarkFeatures = [
+  {
+    label: "Cible TPE (1-9 salariés)",
+    payfit: true,
+    factorial: false,
+    lucca: false,
+    cegid: false,
+  },
+  {
+    label: "Cible PME (10-250 salariés)",
+    payfit: true,
+    factorial: true,
+    lucca: true,
+    cegid: true,
+  },
+  {
+    label: "Paie 100% automatisée",
+    payfit: true,
+    factorial: "partial",
+    lucca: "partial",
+    cegid: false,
+  },
+  {
+    label: "Mises à jour légales automatiques",
+    payfit: true,
+    factorial: "partial",
+    lucca: true,
+    cegid: "partial",
+  },
+  {
+    label: "Interface simple et intuitive",
+    payfit: true,
+    factorial: "partial",
+    lucca: "partial",
+    cegid: false,
+  },
+  {
+    label: "Tarifs transparents",
+    payfit: true,
+    factorial: true,
+    lucca: "partial",
+    cegid: false,
+  },
+  {
+    label: "Outils interactifs publics (quiz, simulateurs)",
+    payfit: true,
+    factorial: false,
+    lucca: false,
+    cegid: false,
+  },
+  {
+    label: "Contenu expert paie/RH sourcé",
+    payfit: true,
+    factorial: "partial",
+    lucca: true,
+    cegid: "partial",
+  },
+  {
+    label: "Adapté au droit français",
+    payfit: true,
+    factorial: "partial",
+    lucca: true,
+    cegid: true,
+  },
+  {
+    label: "Support client réactif",
+    payfit: true,
+    factorial: false,
+    lucca: true,
+    cegid: false,
+  },
+];
+
 /* ========== PAGE COMPONENT ========== */
 export default function HomePage() {
   return (
@@ -200,10 +272,10 @@ export default function HomePage() {
                 Comment ça marche
               </a>
               <a
-                href="#automation"
+                href="#comparatif"
                 className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
               >
-                Automatisation
+                Comparatif
               </a>
               <a
                 href="#faq"
@@ -449,101 +521,129 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ===== AUTOMATION ENGINE ===== */}
-        <section id="automation" className="py-20 md:py-28 bg-[#FAFBFC]">
-          <div className="max-w-6xl mx-auto px-4">
+        {/* ===== BENCHMARK COMPARATIF ===== */}
+        <section id="comparatif" className="py-20 md:py-28 bg-[#FAFBFC]">
+          <div className="max-w-5xl mx-auto px-4">
             <AnimatedSection className="text-center mb-14">
-              <p className="text-sm font-medium text-violet-600 mb-3 tracking-wide uppercase">
-                Moteur d&apos;automatisation
+              <p className="text-sm font-medium text-[#0066CC] mb-3 tracking-wide uppercase">
+                Comparatif
               </p>
               <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
-                Du signal faible{" "}
-                <span className="text-violet-600">
-                  &agrave; l&apos;article publi&eacute;
-                </span>
-                , automatiquement
+                Pourquoi choisir <span className="text-[#0066CC]">PayFit</span>
+                &nbsp;?
               </h2>
               <p className="text-gray-500 max-w-2xl mx-auto">
-                Notre moteur N8N surveille en continu les sources juridiques et d&eacute;tecte les questions &eacute;mergentes RH/paie. Chaque tendance est scor&eacute;e par IA puis transform&eacute;e en article SEO pr&ecirc;t &agrave; publier.
+                Face à Factorial, Lucca et Cegid, PayFit se distingue par sa
+                simplicité, son automatisation et son expertise du droit
+                français pour les TPE et PME.
               </p>
             </AnimatedSection>
 
-            <FadeInStagger
-              className="grid md:grid-cols-4 gap-6"
-              staggerDelay={150}
-            >
-              <div className="bg-white rounded-2xl p-6 border border-gray-100 hover:border-violet-200 hover:shadow-lg transition-all duration-300 text-center">
-                <div className="w-12 h-12 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center mx-auto mb-4">
-                  <Search className="w-6 h-6" />
-                </div>
-                <h3 className="font-semibold text-gray-900 mb-2">Veille automatique</h3>
-                <p className="text-sm text-gray-500">
-                  Scraping L&eacute;gifrance, PAA Google, forums RH. Chaque jour, de nouvelles questions sont d&eacute;tect&eacute;es.
-                </p>
-              </div>
-
-              <div className="bg-white rounded-2xl p-6 border border-gray-100 hover:border-violet-200 hover:shadow-lg transition-all duration-300 text-center">
-                <div className="w-12 h-12 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center mx-auto mb-4">
-                  <Bot className="w-6 h-6" />
-                </div>
-                <h3 className="font-semibold text-gray-900 mb-2">Scoring IA</h3>
-                <p className="text-sm text-gray-500">
-                  Chaque question est scor&eacute;e sur 3 crit&egrave;res : nouveaut&eacute;, pertinence PayFit et volume de recherche.
-                </p>
-              </div>
-
-              <div className="bg-white rounded-2xl p-6 border border-gray-100 hover:border-violet-200 hover:shadow-lg transition-all duration-300 text-center">
-                <div className="w-12 h-12 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center mx-auto mb-4">
-                  <PenTool className="w-6 h-6" />
-                </div>
-                <h3 className="font-semibold text-gray-900 mb-2">G&eacute;n&eacute;ration SEO</h3>
-                <p className="text-sm text-gray-500">
-                  Un article de ~1000 mots est g&eacute;n&eacute;r&eacute; avec structure H1/H2, FAQ, sources juridiques et CTA PayFit.
-                </p>
-              </div>
-
-              <div className="bg-white rounded-2xl p-6 border border-gray-100 hover:border-violet-200 hover:shadow-lg transition-all duration-300 text-center">
-                <div className="w-12 h-12 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center mx-auto mb-4">
-                  <Zap className="w-6 h-6" />
-                </div>
-                <h3 className="font-semibold text-gray-900 mb-2">Publication</h3>
-                <p className="text-sm text-gray-500">
-                  Review compliance, puis publication en un clic. Optimis&eacute; GEO pour les AI Overviews.
-                </p>
-              </div>
-            </FadeInStagger>
-
-            {/* Pipeline visual */}
-            <AnimatedSection variant="fadeUp" delay={400}>
-              <div className="mt-12 bg-white rounded-2xl border border-gray-100 p-8 shadow-sm">
-                <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm">
-                  <div className="flex items-center gap-2 text-violet-600 font-medium">
-                    <div className="w-8 h-8 rounded-full bg-violet-100 flex items-center justify-center">
-                      <Search className="w-4 h-4" />
-                    </div>
-                    L&eacute;gifrance + PAA
+            <AnimatedSection variant="fadeUp" delay={150}>
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                {/* Table header */}
+                <div className="grid grid-cols-[1fr_repeat(4,80px)] md:grid-cols-[1fr_repeat(4,120px)] items-center gap-0 border-b border-gray-100 bg-gray-50/50 px-4 md:px-6 py-4">
+                  <div className="text-sm font-medium text-gray-500">
+                    Fonctionnalité
                   </div>
-                  <ChevronRight className="w-5 h-5 text-gray-300 hidden md:block" />
-                  <div className="flex items-center gap-2 text-violet-600 font-medium">
-                    <div className="w-8 h-8 rounded-full bg-violet-100 flex items-center justify-center">
-                      <Bot className="w-4 h-4" />
-                    </div>
-                    Scoring (3 crit&egrave;res)
+                  <div className="text-center">
+                    <span className="text-sm font-bold text-[#0066CC]">
+                      PayFit
+                    </span>
                   </div>
-                  <ChevronRight className="w-5 h-5 text-gray-300 hidden md:block" />
-                  <div className="flex items-center gap-2 text-violet-600 font-medium">
-                    <div className="w-8 h-8 rounded-full bg-violet-100 flex items-center justify-center">
-                      <PenTool className="w-4 h-4" />
-                    </div>
-                    Brief + Article SEO
+                  <div className="text-center">
+                    <span className="text-sm font-medium text-gray-500">
+                      Factorial
+                    </span>
                   </div>
-                  <ChevronRight className="w-5 h-5 text-gray-300 hidden md:block" />
-                  <div className="flex items-center gap-2 text-green-600 font-medium">
-                    <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
-                      <CheckCircle className="w-4 h-4" />
-                    </div>
-                    Publi&eacute; sur le blog
+                  <div className="text-center">
+                    <span className="text-sm font-medium text-gray-500">
+                      Lucca
+                    </span>
                   </div>
+                  <div className="text-center">
+                    <span className="text-sm font-medium text-gray-500">
+                      Cegid
+                    </span>
+                  </div>
+                </div>
+
+                {/* Table rows */}
+                {benchmarkFeatures.map((feature, i) => (
+                  <div
+                    key={feature.label}
+                    className={`grid grid-cols-[1fr_repeat(4,80px)] md:grid-cols-[1fr_repeat(4,120px)] items-center gap-0 px-4 md:px-6 py-3.5 ${
+                      i !== benchmarkFeatures.length - 1
+                        ? "border-b border-gray-50"
+                        : ""
+                    } hover:bg-gray-50/50 transition-colors`}
+                  >
+                    <div className="text-sm text-gray-700 pr-2">
+                      {feature.label}
+                    </div>
+                    {(["payfit", "factorial", "lucca", "cegid"] as const).map(
+                      (company) => {
+                        const val = feature[company];
+                        return (
+                          <div key={company} className="flex justify-center">
+                            {val === true ? (
+                              <div
+                                className={`w-7 h-7 rounded-full flex items-center justify-center ${
+                                  company === "payfit"
+                                    ? "bg-[#0066CC]/10"
+                                    : "bg-green-50"
+                                }`}
+                              >
+                                <CheckCircle
+                                  className={`w-4 h-4 ${
+                                    company === "payfit"
+                                      ? "text-[#0066CC]"
+                                      : "text-green-500"
+                                  }`}
+                                />
+                              </div>
+                            ) : val === "partial" ? (
+                              <div className="w-7 h-7 rounded-full bg-amber-50 flex items-center justify-center">
+                                <Minus className="w-4 h-4 text-amber-500" />
+                              </div>
+                            ) : (
+                              <div className="w-7 h-7 rounded-full bg-red-50 flex items-center justify-center">
+                                <X className="w-4 h-4 text-red-400" />
+                              </div>
+                            )}
+                          </div>
+                        );
+                      },
+                    )}
+                  </div>
+                ))}
+              </div>
+            </AnimatedSection>
+
+            {/* Bottom highlight */}
+            <AnimatedSection variant="fadeUp" delay={300}>
+              <div className="mt-8 grid md:grid-cols-3 gap-5">
+                <div className="bg-white rounded-2xl p-6 border border-gray-100 text-center">
+                  <div className="text-3xl font-bold text-[#0066CC] mb-1">
+                    #1
+                  </div>
+                  <p className="text-sm text-gray-500">
+                    Solution paie pour TPE/PME en France
+                  </p>
+                </div>
+                <div className="bg-white rounded-2xl p-6 border border-gray-100 text-center">
+                  <div className="text-3xl font-bold text-[#0066CC] mb-1">
+                    20 000+
+                  </div>
+                  <p className="text-sm text-gray-500">
+                    entreprises font confiance à PayFit
+                  </p>
+                </div>
+                <div className="bg-white rounded-2xl p-6 border border-gray-100 text-center">
+                  <div className="text-3xl font-bold text-[#0066CC] mb-1">
+                    4.5
+                  </div>
+                  <p className="text-sm text-gray-500">évaluation Trustpilot</p>
                 </div>
               </div>
             </AnimatedSection>
