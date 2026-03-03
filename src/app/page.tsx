@@ -34,11 +34,6 @@ export default function HomePage() {
             >
               Quiz conformité
             </Link>
-            <Link href="/login">
-              <Button variant="outline" size="sm">
-                Dashboard
-              </Button>
-            </Link>
           </nav>
         </div>
       </header>
@@ -68,15 +63,6 @@ export default function HomePage() {
               >
                 Testez votre conformité paie
                 <ArrowRight className="w-5 h-5 ml-2" />
-              </Button>
-            </Link>
-            <Link href="/login">
-              <Button
-                variant="outline"
-                size="lg"
-                className="px-8 py-6 text-lg rounded-xl cursor-pointer"
-              >
-                Accéder au dashboard
               </Button>
             </Link>
           </div>
@@ -170,9 +156,6 @@ export default function HomePage() {
           <div className="flex gap-6 text-sm text-gray-500">
             <Link href="/quiz" className="hover:text-[#0066CC]">
               Quiz
-            </Link>
-            <Link href="/login" className="hover:text-[#0066CC]">
-              Dashboard
             </Link>
           </div>
         </div>
