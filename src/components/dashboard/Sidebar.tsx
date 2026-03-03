@@ -12,32 +12,30 @@ import {
   Presentation,
   LogOut,
   ScrollText,
+  FileText,
 } from "lucide-react";
 import Image from "next/image";
 import { Separator } from "@/components/ui/separator";
-import { FileText } from "lucide-react";
 
-const navItems = [
-  { href: "/dashboard", label: "Vue d'ensemble", icon: LayoutDashboard },
-  { href: "/dashboard/trends", label: "Tendances", icon: TrendingUp },
-  { href: "/dashboard/generator", label: "Générateur", icon: Sparkles },
-  {
-    label: "Articles",
-    href: "/dashboard/articles",
-    icon: FileText,
-  },
-  { href: "/dashboard/prompts", label: "Prompts", icon: ScrollText },
-  { href: "/dashboard/benchmark", label: "Benchmark", icon: BarChart3 },
-  {
-    href: "/dashboard/quiz-analytics",
-    label: "Quiz Analytics",
-    icon: PieChart,
-  },
-  {
-    href: "/dashboard/presentation",
-    label: "Présentation",
-    icon: Presentation,
-  },
+type NavItem =
+  | { type: "link"; href: string; label: string; icon: React.ComponentType<{ className?: string }> }
+  | { type: "separator"; label: string };
+
+const navItems: NavItem[] = [
+  { type: "link", href: "/dashboard", label: "Vue d'ensemble", icon: LayoutDashboard },
+
+  { type: "separator", label: "Contenu" },
+  { type: "link", href: "/dashboard/trends", label: "Tendances", icon: TrendingUp },
+  { type: "link", href: "/dashboard/generator", label: "Générateur", icon: Sparkles },
+  { type: "link", href: "/dashboard/articles", label: "Articles", icon: FileText },
+  { type: "link", href: "/dashboard/prompts", label: "Prompts", icon: ScrollText },
+
+  { type: "separator", label: "Analytics" },
+  { type: "link", href: "/dashboard/benchmark", label: "Benchmark", icon: BarChart3 },
+  { type: "link", href: "/dashboard/quiz-analytics", label: "Quiz Analytics", icon: PieChart },
+
+  { type: "separator", label: "Projet" },
+  { type: "link", href: "/dashboard/presentation", label: "Présentation", icon: Presentation },
 ];
 
 export function Sidebar() {
@@ -72,8 +70,17 @@ export function Sidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-3 space-y-1">
-        {navItems.map((item) => {
+      <nav className="flex-1 px-3 space-y-0.5 overflow-y-auto">
+        {navItems.map((item, index) => {
+          if (item.type === "separator") {
+            return (
+              <div key={item.label} className={index === 0 ? "pt-1" : "pt-4"}>
+                <p className="px-4 pb-1 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+                  {item.label}
+                </p>
+              </div>
+            );
+          }
           const isActive =
             pathname === item.href ||
             (item.href !== "/dashboard" && pathname.startsWith(item.href));
@@ -81,13 +88,13 @@ export function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm transition-colors ${
+              className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm transition-colors ${
                 isActive
                   ? "bg-blue-50 text-[#0066CC] font-medium"
                   : "text-gray-600 hover:bg-gray-50"
               }`}
             >
-              <item.icon className="w-5 h-5" />
+              <item.icon className="w-4 h-4" />
               {item.label}
             </Link>
           );
