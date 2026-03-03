@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,7 +12,21 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Sparkles, Bot, Loader2, Zap } from "lucide-react";
+import {
+  Sparkles,
+  Bot,
+  Loader2,
+  Zap,
+  ChevronDown,
+  Copy,
+  AlertTriangle,
+} from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
+import { titleSimilarity, keywordSimilarity } from "@/lib/similarity";
+import {
+  SimilarityPanel,
+  type SimilarItem,
+} from "@/components/dashboard/SimilarityPanel";
 
 interface Trend {
   id: string;
@@ -30,6 +44,14 @@ interface Trend {
   user_id: string | null;
 }
 
+interface SimpleArticle {
+  id: string;
+  title: string;
+  slug: string;
+  keyword_primary: string | null;
+  keywords_secondary: string[] | null;
+}
+
 interface TrendTableProps {
   trends: Trend[];
   onTrendUpdated?: () => void;
@@ -42,8 +64,133 @@ const statusConfig: Record<string, { label: string; className: string }> = {
   published: { label: "Publiée", className: "bg-purple-100 text-purple-700" },
 };
 
+/** Calcule un score de similarité simplifié entre deux textes (titre/question) */
+function computeTrendSimilarity(
+  questionA: string,
+  questionB: string
+): { score: number; level: "duplicate" | "high" | "medium" | "low" | "unique" } {
+  const score = Math.round(titleSimilarity(questionA, questionB) * 100);
+  let level: "duplicate" | "high" | "medium" | "low" | "unique";
+  if (score >= 80) level = "duplicate";
+  else if (score >= 60) level = "high";
+  else if (score >= 40) level = "medium";
+  else if (score >= 20) level = "low";
+  else level = "unique";
+  return { score, level };
+}
+
 export function TrendTable({ trends, onTrendUpdated }: TrendTableProps) {
   const [generatingId, setGeneratingId] = useState<string | null>(null);
+  const [articles, setArticles] = useState<SimpleArticle[]>([]);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [expandedItems, setExpandedItems] = useState<SimilarItem[]>([]);
+
+  // Charger les articles pour comparer
+  useEffect(() => {
+    const supabase = createClient();
+    supabase
+      .from("articles")
+      .select("id, title, slug, keyword_primary, keywords_secondary")
+      .then(({ data }) => {
+        if (data) setArticles(data);
+      });
+  }, []);
+
+  /** Trouve les contenus similaires (autres tendances + articles existants) */
+  function getSimilarItems(trendId: string): SimilarItem[] {
+    const trend = trends.find((t) => t.id === trendId);
+    if (!trend) return [];
+
+    const items: SimilarItem[] = [];
+
+    // Comparer avec les autres tendances
+    for (const other of trends) {
+      if (other.id === trendId) continue;
+      const sim = computeTrendSimilarity(trend.question, other.question);
+      if (sim.score >= 25) {
+        items.push({
+          id: other.id,
+          title: other.question,
+          score: sim.score,
+          level: sim.level,
+          details: { title: sim.score, keywords: 0, content: 0 },
+          type: "trend",
+        });
+      }
+    }
+
+    // Comparer avec les articles existants
+    for (const article of articles) {
+      const titleScore = titleSimilarity(trend.question, article.title);
+      const kwScore = article.keyword_primary
+        ? titleSimilarity(trend.question, article.keyword_primary)
+        : 0;
+      const compositeScore = Math.round(
+        Math.max(titleScore, kwScore) * 100
+      );
+      let level: SimilarItem["level"];
+      if (compositeScore >= 80) level = "duplicate";
+      else if (compositeScore >= 60) level = "high";
+      else if (compositeScore >= 40) level = "medium";
+      else if (compositeScore >= 25) level = "low";
+      else continue;
+
+      items.push({
+        id: article.id,
+        title: article.title,
+        slug: article.slug,
+        score: compositeScore,
+        level,
+        details: {
+          title: Math.round(titleScore * 100),
+          keywords: Math.round(kwScore * 100),
+          content: 0,
+        },
+        type: "article",
+      });
+    }
+
+    return items.sort((a, b) => b.score - a.score);
+  }
+
+  /** Meilleur score de similarité pour l'indicateur inline */
+  function getBestMatch(
+    trendId: string
+  ): { score: number; level: string } | null {
+    const trend = trends.find((t) => t.id === trendId);
+    if (!trend) return null;
+
+    let best = 0;
+
+    for (const other of trends) {
+      if (other.id === trendId) continue;
+      const sim = computeTrendSimilarity(trend.question, other.question);
+      if (sim.score > best) best = sim.score;
+    }
+    for (const article of articles) {
+      const s = Math.round(titleSimilarity(trend.question, article.title) * 100);
+      if (s > best) best = s;
+    }
+
+    if (best < 25) return null;
+    let level: string;
+    if (best >= 80) level = "duplicate";
+    else if (best >= 60) level = "high";
+    else if (best >= 40) level = "medium";
+    else level = "low";
+
+    return { score: best, level };
+  }
+
+  function toggleExpand(trendId: string) {
+    if (expandedId === trendId) {
+      setExpandedId(null);
+      setExpandedItems([]);
+    } else {
+      setExpandedId(trendId);
+      setExpandedItems(getSimilarItems(trendId));
+    }
+  }
 
   async function handleAutoGenerate(trend: Trend) {
     setGeneratingId(trend.id);
@@ -85,6 +232,7 @@ export function TrendTable({ trends, onTrendUpdated }: TrendTableProps) {
             <TableHead className="w-20">ICP</TableHead>
             <TableHead className="w-36">Format</TableHead>
             <TableHead className="w-32">Statut</TableHead>
+            <TableHead className="w-28">Similarité</TableHead>
             <TableHead className="w-40">Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -101,7 +249,7 @@ export function TrendTable({ trends, onTrendUpdated }: TrendTableProps) {
             const isAutoDetected = !trend.user_id;
 
             return (
-              <TableRow key={trend.id}>
+              <><TableRow key={trend.id}>
                 <TableCell>
                   <Badge className={scoreColor}>
                     {scoreNum.toFixed(1)}
@@ -135,6 +283,46 @@ export function TrendTable({ trends, onTrendUpdated }: TrendTableProps) {
                 </TableCell>
                 <TableCell>
                   <Badge className={status.className}>{status.label}</Badge>
+                </TableCell>
+                <TableCell>
+                  {(() => {
+                    const match = getBestMatch(trend.id);
+                    if (!match) {
+                      return (
+                        <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
+                          Unique
+                        </Badge>
+                      );
+                    }
+                    return (
+                      <button
+                        onClick={() => toggleExpand(trend.id)}
+                        className="flex items-center gap-1 cursor-pointer hover:opacity-80 transition-opacity"
+                        title="Voir les sujets similaires"
+                      >
+                        {match.level === "duplicate" ? (
+                          <Badge variant="outline" className="text-xs bg-red-50 text-red-700 border-red-200 gap-1">
+                            <Copy className="w-3 h-3" />
+                            {match.score}%
+                          </Badge>
+                        ) : match.level === "high" ? (
+                          <Badge variant="outline" className="text-xs bg-orange-50 text-orange-700 border-orange-200 gap-1">
+                            <AlertTriangle className="w-3 h-3" />
+                            {match.score}%
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-xs bg-amber-50 text-amber-700 border-amber-200 gap-1">
+                            {match.score}%
+                          </Badge>
+                        )}
+                        <ChevronDown
+                          className={`w-3 h-3 text-gray-400 transition-transform ${
+                            expandedId === trend.id ? "rotate-180" : ""
+                          }`}
+                        />
+                      </button>
+                    );
+                  })()}
                 </TableCell>
                 <TableCell>
                   {(trend.status === "new" ||
@@ -172,6 +360,23 @@ export function TrendTable({ trends, onTrendUpdated }: TrendTableProps) {
                   )}
                 </TableCell>
               </TableRow>
+              {expandedId === trend.id && (
+                <TableRow key={`${trend.id}-sim`}>
+                  <TableCell colSpan={8} className="bg-gray-50/50 p-4">
+                    <div className="max-w-2xl">
+                      <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
+                        <Copy className="w-4 h-4 text-gray-400" />
+                        Sujets similaires à &ldquo;{trend.question.length > 50 ? trend.question.slice(0, 50) + "…" : trend.question}&rdquo;
+                      </h4>
+                      <SimilarityPanel
+                        items={expandedItems}
+                        emptyMessage="Cette tendance est unique — aucune similarité détectée."
+                      />
+                    </div>
+                  </TableCell>
+                </TableRow>
+              )}
+              </>
             );
           })}
         </TableBody>

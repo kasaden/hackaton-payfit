@@ -26,8 +26,22 @@ import {
   CheckCircle,
   PenTool,
   ExternalLink,
+  AlertTriangle,
+  Copy,
+  Search,
 } from "lucide-react";
 import Link from "next/link";
+
+interface DuplicateMatch {
+  article_id: string;
+  article_title: string;
+  article_slug: string;
+  similarity: {
+    score: number;
+    details: { title: number; keywords: number; content: number };
+    level: "duplicate" | "high" | "medium" | "low" | "unique";
+  };
+}
 
 interface PromptTemplate {
   id: string;
@@ -54,6 +68,12 @@ function GeneratorContent() {
   const [promptTemplates, setPromptTemplates] = useState<PromptTemplate[]>([]);
   const [selectedTemplateSlug, setSelectedTemplateSlug] = useState("");
   const [customPrompt, setCustomPrompt] = useState("");
+
+  // --- DUPLICATE CHECK ---
+  const [duplicates, setDuplicates] = useState<DuplicateMatch[]>([]);
+  const [checkingDuplicates, setCheckingDuplicates] = useState(false);
+  const [duplicateChecked, setDuplicateChecked] = useState(false);
+  const [showDuplicateWarning, setShowDuplicateWarning] = useState(false);
 
   const [generating, setGenerating] = useState(false);
   const [article, setArticle] = useState<{
@@ -153,8 +173,53 @@ function GeneratorContent() {
     .split(/\s+/)
     .filter((w: string) => w.length > 0).length;
 
+  /** Vérifie les doublons avant de générer */
+  async function checkDuplicates(): Promise<DuplicateMatch[]> {
+    setCheckingDuplicates(true);
+    try {
+      const res = await fetch("/api/check-duplicates", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: keywordPrimary,
+          keyword_primary: keywordPrimary,
+          keywords_secondary: keywordsSecondary
+            .split(",")
+            .map((k: string) => k.trim())
+            .filter(Boolean),
+          exclude_id: article?.id,
+        }),
+      });
+      if (!res.ok) return [];
+      const data = await res.json();
+      setDuplicates(data.duplicates || []);
+      setDuplicateChecked(true);
+      return data.duplicates || [];
+    } catch {
+      return [];
+    } finally {
+      setCheckingDuplicates(false);
+    }
+  }
+
+  /** Gère le clic sur Générer : check doublons d'abord, puis génère */
   async function handleGenerate() {
     if (!keywordPrimary.trim()) return;
+
+    // Check doublons si pas encore fait
+    if (!duplicateChecked) {
+      const found = await checkDuplicates();
+      const hasHighRisk = found.some((d) =>
+        ["duplicate", "high"].includes(d.similarity.level)
+      );
+      if (hasHighRisk) {
+        setShowDuplicateWarning(true);
+        return; // On bloque, l'utilisateur doit confirmer
+      }
+    }
+
+    // Lancer la génération
+    setShowDuplicateWarning(false);
     setGenerating(true);
 
     try {
@@ -171,7 +236,6 @@ function GeneratorContent() {
           trend_id: trendId || undefined,
           custom_prompt: customPrompt,
           template_slug: selectedTemplateSlug || undefined,
-          // Si on re-génère, on envoie l'article_id pour UPDATE au lieu d'INSERT
           article_id: isRegenerate && article ? article.id : undefined,
         }),
       });
@@ -182,6 +246,7 @@ function GeneratorContent() {
       setArticle(data);
       setEditedContent(data.content_markdown);
       setPublished(false);
+      setDuplicateChecked(false);
       setStep(2);
     } catch {
       alert("Erreur lors de la génération. Vérifiez votre clé API OpenAI.");
@@ -189,6 +254,20 @@ function GeneratorContent() {
       setGenerating(false);
     }
   }
+
+  /** Forcer la génération malgré les doublons */
+  function handleForceGenerate() {
+    setDuplicateChecked(true); // skip le re-check
+    setShowDuplicateWarning(false);
+    handleGenerate();
+  }
+
+  // Reset le check quand les inputs changent
+  useEffect(() => {
+    setDuplicateChecked(false);
+    setDuplicates([]);
+    setShowDuplicateWarning(false);
+  }, [keywordPrimary, keywordsSecondary]);
 
   async function handlePublish(isDraft: boolean) {
     if (!article) return;
@@ -311,15 +390,110 @@ function GeneratorContent() {
                 Lié à la tendance : {trendId.slice(0, 8)}...
               </Badge>
             )}
+            {/* Bouton vérifier doublons */}
             <Button
-              onClick={handleGenerate}
-              disabled={generating || !keywordPrimary.trim()}
-              className="w-full bg-[#0066CC] hover:bg-[#004C99] text-white cursor-pointer mt-4"
+              variant="outline"
+              onClick={checkDuplicates}
+              disabled={checkingDuplicates || !keywordPrimary.trim()}
+              className="w-full cursor-pointer mt-4"
+            >
+              {checkingDuplicates ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Vérification des doublons...
+                </>
+              ) : (
+                <>
+                  <Search className="w-4 h-4 mr-2" />
+                  Vérifier les doublons
+                </>
+              )}
+            </Button>
+
+            {/* Résultat du check doublons */}
+            {duplicateChecked && duplicates.length === 0 && (
+              <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700">
+                <CheckCircle className="w-4 h-4 shrink-0" />
+                Aucun doublon détecté. Vous pouvez générer.
+              </div>
+            )}
+
+            {duplicates.length > 0 && (
+              <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg space-y-3">
+                <div className="flex items-center gap-2 text-amber-800 font-medium text-sm">
+                  <AlertTriangle className="w-4 h-4 shrink-0" />
+                  {duplicates.length} article{duplicates.length > 1 ? "s" : ""}{" "}
+                  similaire{duplicates.length > 1 ? "s" : ""} détecté
+                  {duplicates.length > 1 ? "s" : ""}
+                </div>
+                <div className="space-y-2">
+                  {duplicates.slice(0, 5).map((d) => (
+                    <div
+                      key={d.article_id}
+                      className="flex items-center justify-between gap-2 p-2 bg-white rounded-md border border-amber-100"
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Copy className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                        <span className="text-sm text-gray-700 truncate">
+                          {d.article_title}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <Badge
+                          variant="outline"
+                          className={`text-xs ${
+                            d.similarity.level === "duplicate"
+                              ? "bg-red-50 text-red-700 border-red-200"
+                              : d.similarity.level === "high"
+                                ? "bg-orange-50 text-orange-700 border-orange-200"
+                                : d.similarity.level === "medium"
+                                  ? "bg-amber-50 text-amber-700 border-amber-200"
+                                  : "bg-gray-50 text-gray-600 border-gray-200"
+                          }`}
+                        >
+                          {d.similarity.score}%
+                        </Badge>
+                        <Link
+                          href={`/articles/${d.article_slug}`}
+                          target="_blank"
+                          className="text-[#0066CC] hover:text-[#004C99]"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                        </Link>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {showDuplicateWarning && (
+                  <p className="text-xs text-amber-700">
+                    Des articles très similaires existent déjà. Voulez-vous
+                    quand même générer ?
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Bouton Générer */}
+            <Button
+              onClick={
+                showDuplicateWarning ? handleForceGenerate : handleGenerate
+              }
+              disabled={generating || checkingDuplicates || !keywordPrimary.trim()}
+              className={`w-full text-white cursor-pointer ${
+                showDuplicateWarning
+                  ? "bg-amber-600 hover:bg-amber-700"
+                  : "bg-[#0066CC] hover:bg-[#004C99]"
+              }`}
             >
               {generating ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   Génération en cours (10-30s)...
+                </>
+              ) : showDuplicateWarning ? (
+                <>
+                  <AlertTriangle className="w-4 h-4 mr-2" />
+                  Générer quand même
                 </>
               ) : (
                 <>

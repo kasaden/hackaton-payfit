@@ -13,8 +13,26 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { FileText, Plus, ExternalLink, Trash2, RefreshCw, Pencil, RotateCw, Bot, Search } from "lucide-react";
+import {
+  FileText,
+  Plus,
+  ExternalLink,
+  Trash2,
+  RefreshCw,
+  Pencil,
+  RotateCw,
+  Bot,
+  Search,
+  Copy,
+  AlertTriangle,
+} from "lucide-react";
 import Link from "next/link";
+import { findDuplicates, type DuplicateMatch } from "@/lib/similarity";
+import {
+  SimilarityPanel,
+  type SimilarItem,
+} from "@/components/dashboard/SimilarityPanel";
+import { ChevronDown } from "lucide-react";
 
 interface Article {
   id: string;
@@ -25,15 +43,91 @@ interface Article {
   created_at: string;
   word_count: number | null;
   content_markdown: string | null;
+  keyword_primary: string | null;
+  keywords_secondary: string[] | null;
   user_id: string | null;
   trend_id: string | null;
 }
+
+/** Map article_id → meilleur doublon détecté */
+type DuplicateMap = Record<string, DuplicateMatch>;
 
 export default function ArticlesPage() {
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [duplicateMap, setDuplicateMap] = useState<DuplicateMap>({});
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [expandedItems, setExpandedItems] = useState<SimilarItem[]>([]);
   const supabase = createClient();
+
+  /** Calcule tous les articles similaires pour un article donné */
+  function getSimilarItems(articleId: string): SimilarItem[] {
+    const article = articles.find((a) => a.id === articleId);
+    if (!article) return [];
+
+    const matches = findDuplicates(
+      {
+        title: article.title,
+        keyword_primary: article.keyword_primary || "",
+        keywords_secondary: article.keywords_secondary || [],
+      },
+      articles.map((a) => ({
+        id: a.id,
+        title: a.title,
+        slug: a.slug,
+        keyword_primary: a.keyword_primary || "",
+        keywords_secondary: a.keywords_secondary || [],
+      })),
+      { threshold: 20, excludeId: article.id }
+    );
+
+    return matches.map((m) => ({
+      id: m.article_id,
+      title: m.article_title,
+      slug: m.article_slug,
+      score: m.similarity.score,
+      level: m.similarity.level,
+      details: m.similarity.details,
+      type: "article" as const,
+    }));
+  }
+
+  function toggleExpand(articleId: string) {
+    if (expandedId === articleId) {
+      setExpandedId(null);
+      setExpandedItems([]);
+    } else {
+      setExpandedId(articleId);
+      setExpandedItems(getSimilarItems(articleId));
+    }
+  }
+
+  /** Calcule les doublons entre tous les articles */
+  function computeDuplicateMap(allArticles: Article[]) {
+    const map: DuplicateMap = {};
+    for (const article of allArticles) {
+      const matches = findDuplicates(
+        {
+          title: article.title,
+          keyword_primary: article.keyword_primary || "",
+          keywords_secondary: article.keywords_secondary || [],
+        },
+        allArticles.map((a) => ({
+          id: a.id,
+          title: a.title,
+          slug: a.slug,
+          keyword_primary: a.keyword_primary || "",
+          keywords_secondary: a.keywords_secondary || [],
+        })),
+        { threshold: 40, excludeId: article.id }
+      );
+      if (matches.length > 0) {
+        map[article.id] = matches[0]; // meilleur match
+      }
+    }
+    setDuplicateMap(map);
+  }
 
   const filteredArticles = articles.filter((a) => {
     if (!search.trim()) return true;
@@ -57,6 +151,7 @@ export default function ArticlesPage() {
 
     if (!error && data) {
       setArticles(data);
+      computeDuplicateMap(data);
     } else {
       console.error("Erreur lors de la récupération des articles:", error);
     }
@@ -173,8 +268,9 @@ export default function ArticlesPage() {
             <Table>
               <TableHeader className="bg-gray-50">
                 <TableRow>
-                  <TableHead className="w-[40%]">Titre</TableHead>
+                  <TableHead className="w-[35%]">Titre</TableHead>
                   <TableHead>Statut</TableHead>
+                  <TableHead>Similarité</TableHead>
                   <TableHead>Date</TableHead>
                   <TableHead>Mots</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
@@ -182,7 +278,7 @@ export default function ArticlesPage() {
               </TableHeader>
               <TableBody>
                 {filteredArticles.map((article) => (
-                  <TableRow key={article.id}>
+                  <><TableRow key={article.id}>
                     <TableCell className="font-medium">
                       <div className="flex items-center gap-2">
                         <div className="truncate max-w-[260px] text-[#152330]">
@@ -218,6 +314,42 @@ export default function ArticlesPage() {
                       >
                         {article.is_published ? "Publié" : "Brouillon"}
                       </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <button
+                        onClick={() => toggleExpand(article.id)}
+                        className="flex items-center gap-1 cursor-pointer hover:opacity-80 transition-opacity"
+                        title="Cliquer pour voir les détails de similarité"
+                      >
+                        {duplicateMap[article.id] ? (
+                          <>
+                            {duplicateMap[article.id].similarity.level === "duplicate" ? (
+                              <Badge variant="outline" className="text-xs bg-red-50 text-red-700 border-red-200 gap-1">
+                                <Copy className="w-3 h-3" />
+                                {duplicateMap[article.id].similarity.score}%
+                              </Badge>
+                            ) : duplicateMap[article.id].similarity.level === "high" ? (
+                              <Badge variant="outline" className="text-xs bg-orange-50 text-orange-700 border-orange-200 gap-1">
+                                <AlertTriangle className="w-3 h-3" />
+                                {duplicateMap[article.id].similarity.score}%
+                              </Badge>
+                            ) : (
+                              <Badge variant="outline" className="text-xs bg-amber-50 text-amber-700 border-amber-200 gap-1">
+                                {duplicateMap[article.id].similarity.score}%
+                              </Badge>
+                            )}
+                          </>
+                        ) : (
+                          <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
+                            Unique
+                          </Badge>
+                        )}
+                        <ChevronDown
+                          className={`w-3 h-3 text-gray-400 transition-transform ${
+                            expandedId === article.id ? "rotate-180" : ""
+                          }`}
+                        />
+                      </button>
                     </TableCell>
                     <TableCell className="text-sm text-gray-600">
                       {new Date(article.created_at).toLocaleDateString("fr-FR")}
@@ -273,6 +405,23 @@ export default function ArticlesPage() {
                       </div>
                     </TableCell>
                   </TableRow>
+                  {expandedId === article.id && (
+                    <TableRow key={`${article.id}-sim`}>
+                      <TableCell colSpan={6} className="bg-gray-50/50 p-4">
+                        <div className="max-w-2xl">
+                          <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
+                            <Copy className="w-4 h-4 text-gray-400" />
+                            Sujets similaires à &ldquo;{article.title.length > 50 ? article.title.slice(0, 50) + "…" : article.title}&rdquo;
+                          </h4>
+                          <SimilarityPanel
+                            items={expandedItems}
+                            emptyMessage="Cet article est unique — aucune similarité détectée."
+                          />
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  </>
                 ))}
               </TableBody>
             </Table>
