@@ -14,6 +14,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { FeaturesCarousel } from "@/components/article/FeaturesCarousel";
+import { RelatedArticles } from "@/components/article/RelatedArticles";
 
 // --- PARSEUR MARKDOWN BASIQUE ---
 // Rend le texte avec gras (**text**) de manière sûre via React (pas de dangerouslySetInnerHTML)
@@ -294,6 +295,15 @@ export default async function ArticlePage({
                 </a>
               </div>
             </div>
+
+            {/* Articles similaires */}
+            <RelatedArticles
+              currentArticleId={article.id}
+              currentTrendId={article.trend_id}
+              currentTitle={article.title}
+              currentKeywordPrimary={article.keyword_primary || ""}
+              currentKeywordsSecondary={article.keywords_secondary || []}
+            />
 
             {/* REMPLACEMENT ICI PAR LE COMPOSANT INTERACTIF */}
             <FeaturesCarousel />
