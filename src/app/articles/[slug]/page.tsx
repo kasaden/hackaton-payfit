@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { Metadata } from "next";
 import { createServerComponentClient } from "@/lib/supabase/server";
 import {
   Star,
@@ -15,6 +16,143 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { FeaturesCarousel } from "@/components/article/FeaturesCarousel";
 import { RelatedArticles } from "@/components/article/RelatedArticles";
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://payfit-seo-copilot.vercel.app";
+
+// --- METADATA DYNAMIQUE ---
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const supabase = await createServerComponentClient();
+  const { data: article } = await supabase
+    .from("articles")
+    .select("title, meta_description, keyword_primary, keywords_secondary, published_at, updated_at")
+    .eq("slug", slug)
+    .single();
+
+  if (!article) {
+    return { title: "Article introuvable" };
+  }
+
+  const keywords = [
+    article.keyword_primary,
+    ...(article.keywords_secondary || []),
+  ].filter(Boolean);
+
+  return {
+    title: `${article.title} | PayFit SEO Copilot`,
+    description: article.meta_description || article.title,
+    keywords,
+    alternates: {
+      canonical: `${SITE_URL}/articles/${slug}`,
+    },
+    openGraph: {
+      title: article.title,
+      description: article.meta_description || article.title,
+      type: "article",
+      locale: "fr_FR",
+      url: `${SITE_URL}/articles/${slug}`,
+      siteName: "PayFit SEO Copilot",
+      publishedTime: article.published_at || undefined,
+      modifiedTime: article.updated_at || undefined,
+      authors: ["PayFit"],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: article.title,
+      description: article.meta_description || article.title,
+    },
+    robots: {
+      index: true,
+      follow: true,
+    },
+  };
+}
+
+// --- HELPERS ---
+
+/** Découpe le contenu markdown en sections basées sur les H2 */
+function splitByH2(content: string): string[] {
+  const sections: string[] = [];
+  const lines = content.split("\n");
+  let current: string[] = [];
+
+  for (const line of lines) {
+    if (line.startsWith("## ") && current.length > 0) {
+      sections.push(current.join("\n"));
+      current = [];
+    }
+    current.push(line);
+  }
+  if (current.length > 0) sections.push(current.join("\n"));
+  return sections;
+}
+
+/** Bloc Trustpilot */
+function TrustpilotBlock() {
+  return (
+    <div className="my-12 bg-[#152330] rounded-2xl p-8 text-white flex flex-col md:flex-row items-center justify-between gap-6">
+      <div className="space-y-2">
+        <h3 className="text-2xl font-bold">
+          Rejoignez plus de 20 000 TPE et PME
+        </h3>
+        <p className="text-gray-300">
+          PayFit est noté <strong className="text-white">4.5/5</strong>{" "}
+          sur Trustpilot.
+        </p>
+      </div>
+      <div className="flex flex-col items-center shrink-0">
+        <div className="flex gap-1 mb-2">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div
+              key={i}
+              className="w-8 h-8 bg-[#00B67A] flex items-center justify-center rounded-sm"
+            >
+              <Star className="w-5 h-5 text-white fill-white" />
+            </div>
+          ))}
+        </div>
+        <span className="text-sm font-medium">TrustScore 4.5</span>
+      </div>
+    </div>
+  );
+}
+
+/** Bloc CTA quiz + démo */
+function CtaBlock() {
+  return (
+    <div className="my-12 p-8 bg-blue-50 rounded-2xl border border-blue-100 text-center">
+      <h3 className="text-xl font-semibold text-gray-900 mb-2">
+        Vous souhaitez automatiser votre paie ?
+      </h3>
+      <p className="text-gray-600 mb-6">
+        PayFit intègre automatiquement les évolutions légales 2026.
+      </p>
+      <div className="flex flex-col sm:flex-row gap-3 justify-center">
+        <Link href="/quiz">
+          <Button className="bg-[#0066CC] hover:bg-[#004C99] text-white cursor-pointer h-11 px-6">
+            Testez votre conformité paie
+          </Button>
+        </Link>
+        <a
+          href="https://payfit.com/fr/demo/"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <Button
+            variant="outline"
+            className="cursor-pointer h-11 px-6"
+          >
+            Demander une démo PayFit
+          </Button>
+        </a>
+      </div>
+    </div>
+  );
+}
 
 // --- PARSEUR MARKDOWN BASIQUE ---
 // Rend le texte avec gras (**text**) de manière sûre via React (pas de dangerouslySetInnerHTML)
@@ -135,8 +273,97 @@ export default async function ArticlePage({
     });
   }
 
+  // 3. Structured Data JSON-LD
+  const articleUrl = `${SITE_URL}/articles/${slug}`;
+
+  const articleJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: article.title,
+    description: article.meta_description || article.title,
+    url: articleUrl,
+    datePublished: article.published_at || article.created_at,
+    dateModified: article.updated_at || article.published_at || article.created_at,
+    wordCount: article.word_count,
+    inLanguage: "fr",
+    author: {
+      "@type": "Organization",
+      name: "PayFit",
+      url: "https://payfit.com",
+    },
+    publisher: {
+      "@type": "Organization",
+      name: "PayFit",
+      url: "https://payfit.com",
+      logo: {
+        "@type": "ImageObject",
+        url: `${SITE_URL}/logo-seo-copilot.png`,
+      },
+    },
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": articleUrl,
+    },
+    keywords: [
+      article.keyword_primary,
+      ...(article.keywords_secondary || []),
+    ].filter(Boolean).join(", "),
+  };
+
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Accueil",
+        item: SITE_URL,
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Articles",
+        item: `${SITE_URL}/dashboard`,
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: article.title,
+        item: articleUrl,
+      },
+    ],
+  };
+
+  const organizationJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "PayFit",
+    url: "https://payfit.com",
+    logo: `${SITE_URL}/logo-seo-copilot.png`,
+    description: "Solution de gestion de la paie et des RH pour les TPE et PME.",
+    sameAs: [
+      "https://www.linkedin.com/company/payfit",
+      "https://twitter.com/PayFit",
+    ],
+  };
+
   return (
     <div className="min-h-screen bg-white">
+      {/* JSON-LD Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+      />
+
       {/* Header original conservé */}
       <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
@@ -237,76 +464,51 @@ export default async function ArticlePage({
             </div>
           </div>
 
-          {/* COLONNE DROITE : Contenu de l'article */}
+          {/* COLONNE DROITE : Contenu intercalé avec les blocs */}
           <div className="w-full lg:w-3/4">
-            <MarkdownRenderer content={article.content_markdown} />
+            {(() => {
+              const sections = splitByH2(article.content_markdown);
 
-            {/* BLOC TRUSTPILOT */}
-            <div className="mt-16 bg-[#152330] rounded-2xl p-8 text-white flex flex-col md:flex-row items-center justify-between gap-6">
-              <div className="space-y-2">
-                <h3 className="text-2xl font-bold">
-                  Rejoignez plus de 20 000 TPE et PME
-                </h3>
-                <p className="text-gray-300">
-                  PayFit est noté <strong className="text-white">4.5/5</strong>{" "}
-                  sur Trustpilot.
-                </p>
-              </div>
-              <div className="flex flex-col items-center shrink-0">
-                <div className="flex gap-1 mb-2">
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <div
-                      key={i}
-                      className="w-8 h-8 bg-[#00B67A] flex items-center justify-center rounded-sm"
-                    >
-                      <Star className="w-5 h-5 text-white fill-white" />
+              // Blocs à intercaler après chaque section (par index)
+              const interleaved: Record<number, React.ReactNode> = {
+                0: <TrustpilotBlock key="trustpilot" />,
+                1: <FeaturesCarousel key="carousel" />,
+                2: (
+                  <RelatedArticles
+                    key="related"
+                    currentArticleId={article.id}
+                    currentTrendId={article.trend_id}
+                    currentTitle={article.title}
+                    currentKeywordPrimary={article.keyword_primary || ""}
+                    currentKeywordsSecondary={article.keywords_secondary || []}
+                  />
+                ),
+                3: <CtaBlock key="cta" />,
+              };
+
+              // Indices de blocs non encore placés (si < 4 sections)
+              const placedIndices = new Set(
+                Object.keys(interleaved)
+                  .map(Number)
+                  .filter((i) => i < sections.length)
+              );
+              const remaining = Object.entries(interleaved)
+                .filter(([i]) => !placedIndices.has(Number(i)))
+                .sort(([a], [b]) => Number(a) - Number(b))
+                .map(([, node]) => node);
+
+              return (
+                <>
+                  {sections.map((section, i) => (
+                    <div key={i}>
+                      <MarkdownRenderer content={section} />
+                      {interleaved[i] ?? null}
                     </div>
                   ))}
-                </div>
-                <span className="text-sm font-medium">TrustScore 4.5</span>
-              </div>
-            </div>
-
-            {/* CTA original intégré à la fin */}
-            <div className="mt-12 p-8 bg-blue-50 rounded-2xl border border-blue-100 text-center">
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                Vous souhaitez automatiser votre paie ?
-              </h3>
-              <p className="text-gray-600 mb-6">
-                PayFit intègre automatiquement les évolutions légales 2026.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <Link href="/quiz">
-                  <Button className="bg-[#0066CC] hover:bg-[#004C99] text-white cursor-pointer h-11 px-6">
-                    Testez votre conformité paie
-                  </Button>
-                </Link>
-                <a
-                  href="https://payfit.com/fr/demo/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <Button
-                    variant="outline"
-                    className="cursor-pointer h-11 px-6"
-                  >
-                    Demander une démo PayFit
-                  </Button>
-                </a>
-              </div>
-            </div>
-
-            {/* Articles similaires */}
-            <RelatedArticles
-              currentArticleId={article.id}
-              currentTrendId={article.trend_id}
-              currentTitle={article.title}
-              currentKeywordPrimary={article.keyword_primary || ""}
-              currentKeywordsSecondary={article.keywords_secondary || []}
-            />
-
-            {/* REMPLACEMENT ICI PAR LE COMPOSANT INTERACTIF */}
-            <FeaturesCarousel />
+                  {remaining}
+                </>
+              );
+            })()}
           </div>
         </div>
       </div>
