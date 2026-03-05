@@ -4,7 +4,7 @@ import { openai } from '@/lib/openai'
 import { isValidOrigin } from '@/lib/csrf'
 import { checkRateLimit } from '@/lib/rate-limit'
 import { getPromptTemplate, interpolateTemplate } from '@/lib/prompts'
-import { getPublishedArticlesForLinking, buildNetlinkingPromptSection } from '@/lib/netlinking'
+import { getPublishedArticlesForLinking, buildNetlinkingPromptSection, injectNetlinkingWithAI } from '@/lib/netlinking'
 
 function slugify(text: string): string {
   return text
@@ -112,10 +112,13 @@ Réponds uniquement avec l'article en markdown. Pas d'introduction ni de comment
       ],
     })
 
-    const content_markdown = completion.choices[0]?.message?.content
-    if (!content_markdown) {
+    const rawContent = completion.choices[0]?.message?.content
+    if (!rawContent) {
       return NextResponse.json({ error: 'OpenAI returned empty content' }, { status: 500 })
     }
+
+    // 2ème passe IA : injecter des liens internes naturellement
+    const content_markdown = await injectNetlinkingWithAI(rawContent, existingArticles)
 
     const firstLine = content_markdown.split('\n')[0]
     const title = firstLine.replace(/^#\s*/, '').trim()

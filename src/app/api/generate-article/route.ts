@@ -4,7 +4,7 @@ import { openai } from '@/lib/openai'
 import { checkRateLimit } from '@/lib/rate-limit'
 import { isValidOrigin } from '@/lib/csrf'
 import { getPromptTemplate, interpolateTemplate } from '@/lib/prompts'
-import { getPublishedArticlesForLinking, buildNetlinkingPromptSection } from '@/lib/netlinking'
+import { getPublishedArticlesForLinking, buildNetlinkingPromptSection, injectNetlinkingWithAI } from '@/lib/netlinking'
 import { getLegalReferences, buildLegalReferencesPromptSection } from '@/lib/legal-references'
 
 function slugify(text: string): string {
@@ -95,13 +95,14 @@ CIBLES :
     const template = await getPromptTemplate(template_slug || 'seo_standard')
     const systemPrompt = template?.system_prompt || FALLBACK_SYSTEM_PROMPT
 
+    // Fetch existing published articles for internal linking (netlinking)
+    // IMPORTANT: injecté AVANT les sources légales pour que l'IA le priorise
+    const existingArticles = await getPublishedArticlesForLinking(article_id || undefined)
+    const netlinkingSection = buildNetlinkingPromptSection(existingArticles)
+
     // Fetch legal references for the topic (injected into prompt)
     const legalRefs = await getLegalReferences(keyword_primary, keywords_secondary)
     const legalRefsSection = buildLegalReferencesPromptSection(legalRefs)
-
-    // Fetch existing published articles for internal linking (netlinking)
-    const existingArticles = await getPublishedArticlesForLinking(article_id || undefined)
-    const netlinkingSection = buildNetlinkingPromptSection(existingArticles)
 
     // custom_prompt from the generator UI overrides the DB template
     const userPromptTemplate = custom_prompt || template?.user_prompt_template || custom_prompt
@@ -109,7 +110,7 @@ CIBLES :
       keyword_primary,
       keywords_secondary: keywords_secondary.join(', '),
       icp_target,
-    }) + legalRefsSection + netlinkingSection
+    }) + netlinkingSection + legalRefsSection
 
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
@@ -120,13 +121,16 @@ CIBLES :
       ],
     })
 
-    const content_markdown = completion.choices[0]?.message?.content
-    if (!content_markdown) {
+    const rawContent = completion.choices[0]?.message?.content
+    if (!rawContent) {
       return NextResponse.json(
         { error: 'OpenAI returned empty content' },
         { status: 500 }
       )
     }
+
+    // 2ème passe IA : injecter des liens internes naturellement
+    const content_markdown = await injectNetlinkingWithAI(rawContent, existingArticles)
 
     const firstLine = content_markdown.split('\n')[0]
     const title = firstLine.replace(/^#\s*/, '').trim()

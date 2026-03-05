@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
 import { createServerComponentClient } from "@/lib/supabase/server";
+import { applyAutoLinking } from "@/lib/auto-linking";
 import {
   Star,
   CheckCircle,
@@ -294,11 +295,14 @@ export default async function ArticlePage({
 	notFound();
   }
 
-  // 2. Extraire les titres H2 pour construire le Sommaire
+  // 2. Auto-linking : injecter des liens internes automatiquement
+  const enrichedMarkdown = await applyAutoLinking(article.content_markdown, slug);
+
+  // 3. Extraire les titres H2 pour construire le Sommaire
   const h2Regex = /^##\s+(.+)$/gm;
   const sommaire: { id: string; text: string }[] = [];
   let match;
-  while ((match = h2Regex.exec(article.content_markdown)) !== null) {
+  while ((match = h2Regex.exec(enrichedMarkdown)) !== null) {
 	const text = match[1];
 	sommaire.push({
 	  id: text.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
@@ -386,9 +390,9 @@ export default async function ArticlePage({
 	],
   };
 
-  // 4. Extract FAQ entries from markdown for FAQPage JSON-LD
+  // 5. Extract FAQ entries from markdown for FAQPage JSON-LD
   const faqEntries: { question: string; answer: string }[] = [];
-  const faqSectionMatch = article.content_markdown.match(/##\s*(?:FAQ|Questions fréquentes)([\s\S]*?)(?=\n##\s[^#]|$)/i);
+  const faqSectionMatch = enrichedMarkdown.match(/##\s*(?:FAQ|Questions fréquentes)([\s\S]*?)(?=\n##\s[^#]|$)/i);
   if (faqSectionMatch) {
 	const faqContent = faqSectionMatch[1];
 	// Match ### Question ? followed by answer lines
@@ -546,7 +550,7 @@ export default async function ArticlePage({
 		  {/* COLONNE DROITE : Contenu intercalé avec les blocs */}
 		  <div className="w-full lg:w-3/4">
 			{(() => {
-			  const sections = splitByH2(article.content_markdown);
+			  const sections = splitByH2(enrichedMarkdown);
 
 			  // Blocs à intercaler après chaque section (par index)
 			  const interleaved: Record<number, React.ReactNode> = {

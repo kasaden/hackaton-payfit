@@ -3,7 +3,7 @@ import { createServiceClient } from '@/lib/supabase/server'
 import { openai } from '@/lib/openai'
 import { getPromptTemplate, interpolateTemplate } from '@/lib/prompts'
 import { getLegalReferences, buildLegalReferencesPromptSection } from '@/lib/legal-references'
-import { getPublishedArticlesForLinking, buildNetlinkingPromptSection } from '@/lib/netlinking'
+import { getPublishedArticlesForLinking, buildNetlinkingPromptSection, injectNetlinkingWithAI } from '@/lib/netlinking'
 
 function slugify(text: string): string {
   return text
@@ -151,6 +151,11 @@ Réponds uniquement avec l'article en markdown. Pas d'introduction ni de comment
   const template = await getPromptTemplate(template_slug || 'seo_standard')
   const systemPrompt = template?.system_prompt || FALLBACK_SYSTEM_PROMPT
 
+  // Fetch existing articles for internal linking
+  // IMPORTANT: injecté AVANT les sources légales pour que l'IA le priorise
+  const existingArticles = await getPublishedArticlesForLinking()
+  const netlinkingSection = buildNetlinkingPromptSection(existingArticles)
+
   // Fetch legal references for the topic
   const secondaryArray = Array.isArray(keywords_secondary)
     ? keywords_secondary
@@ -158,15 +163,11 @@ Réponds uniquement avec l'article en markdown. Pas d'introduction ni de comment
   const legalRefs = await getLegalReferences(keyword_primary, secondaryArray)
   const legalRefsSection = buildLegalReferencesPromptSection(legalRefs)
 
-  // Fetch existing articles for internal linking
-  const existingArticles = await getPublishedArticlesForLinking()
-  const netlinkingSection = buildNetlinkingPromptSection(existingArticles)
-
   const userPrompt = interpolateTemplate(template?.user_prompt_template || FALLBACK_USER_PROMPT, {
     keyword_primary,
     keywords_secondary: secondaryKw,
     icp_target,
-  }) + legalRefsSection + netlinkingSection
+  }) + netlinkingSection + legalRefsSection
 
   const completion = await openai.chat.completions.create({
     model: 'gpt-4o-mini',
@@ -177,13 +178,16 @@ Réponds uniquement avec l'article en markdown. Pas d'introduction ni de comment
     ],
   })
 
-  const content_markdown = completion.choices[0]?.message?.content
-  if (!content_markdown) {
+  const rawContent = completion.choices[0]?.message?.content
+  if (!rawContent) {
     return NextResponse.json(
       { error: 'OpenAI returned empty content' },
       { status: 500 }
     )
   }
+
+  // 2ème passe IA : injecter des liens internes naturellement
+  const content_markdown = await injectNetlinkingWithAI(rawContent, existingArticles)
 
   const firstLine = content_markdown.split('\n')[0]
   const title = firstLine.replace(/^#\s*/, '').trim()
