@@ -341,6 +341,11 @@ export default async function ArticlePage({
 	  article.keyword_primary,
 	  ...(article.keywords_secondary || []),
 	].filter(Boolean).join(", "),
+	articleSection: "Conseils RH & Paie",
+	about: {
+	  "@type": "Thing",
+	  name: article.keyword_primary || article.title,
+	},
   };
 
   const breadcrumbJsonLd = {
@@ -381,6 +386,41 @@ export default async function ArticlePage({
 	],
   };
 
+  // 4. Extract FAQ entries from markdown for FAQPage JSON-LD
+  const faqEntries: { question: string; answer: string }[] = [];
+  const faqSectionMatch = article.content_markdown.match(/##\s*(?:FAQ|Questions fréquentes)([\s\S]*?)(?=\n##\s[^#]|$)/i);
+  if (faqSectionMatch) {
+	const faqContent = faqSectionMatch[1];
+	// Match ### Question ? followed by answer lines
+	const questionBlocks = faqContent.split(/###\s+/).filter(Boolean);
+	for (const block of questionBlocks) {
+	  const lines = block.split('\n').filter((l: string) => l.trim() !== '');
+	  if (lines.length >= 2) {
+		const question = lines[0].replace(/\*\*/g, '').replace(/\??\s*$/, '?').trim();
+		const answer = lines.slice(1)
+		  .map((l: string) => l.replace(/^\*\*[QR]:\*\*\s*/, '').replace(/^[QR]:\s*/, '').replace(/\*\*/g, '').trim())
+		  .filter(Boolean)
+		  .join(' ');
+		if (question && answer) {
+		  faqEntries.push({ question, answer });
+		}
+	  }
+	}
+  }
+
+  const faqJsonLd = faqEntries.length > 0 ? {
+	"@context": "https://schema.org",
+	"@type": "FAQPage",
+	mainEntity: faqEntries.map((faq) => ({
+	  "@type": "Question",
+	  name: faq.question,
+	  acceptedAnswer: {
+		"@type": "Answer",
+		text: faq.answer,
+	  },
+	})),
+  } : null;
+
   return (
 	<div className="min-h-screen bg-white">
 	  {/* JSON-LD Structured Data */}
@@ -396,6 +436,12 @@ export default async function ArticlePage({
 		type="application/ld+json"
 		dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
 	  />
+	  {faqJsonLd && (
+		<script
+		  type="application/ld+json"
+		  dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+		/>
+	  )}
 
 	  {/* Header original conservé */}
 	  <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
@@ -542,6 +588,23 @@ export default async function ArticlePage({
 				</>
 			  );
 			})()}
+
+			{/* Compliance disclaimer */}
+			<aside className="mt-16 pt-8 border-t border-gray-200">
+			  <p className="text-xs text-gray-400 leading-relaxed">
+				Cet article est fourni à titre informatif et ne constitue pas un
+				conseil juridique. Les informations sont à jour à la date de
+				publication
+				{article.published_at &&
+				  ` (${new Date(article.published_at).toLocaleDateString("fr-FR", {
+					year: "numeric",
+					month: "long",
+					day: "numeric",
+				  })})`}
+				. Pour toute question relative à votre situation spécifique,
+				consultez un professionnel du droit social ou votre expert-comptable.
+			  </p>
+			</aside>
 		  </div>
 		</div>
 	  </div>

@@ -1,42 +1,13 @@
 -- ============================================
--- MIGRATION: Table prompt_templates
--- Prompts éditables depuis le dashboard
+-- MIGRATION 08: Mise à jour des prompts
+-- SEO, Compliance & Tone of Voice PayFit
+-- À exécuter dans le SQL Editor Supabase
 -- ============================================
 
-CREATE TABLE public.prompt_templates (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  slug TEXT UNIQUE NOT NULL,
-  name TEXT NOT NULL,
-  system_prompt TEXT NOT NULL,
-  user_prompt_template TEXT NOT NULL,
-  variables TEXT[] DEFAULT '{}',
-  is_default BOOLEAN DEFAULT false,
-  created_at TIMESTAMPTZ DEFAULT now(),
-  updated_at TIMESTAMPTZ DEFAULT now()
-);
-
--- RLS
-ALTER TABLE public.prompt_templates ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "prompt_templates_read_auth"
-  ON public.prompt_templates FOR SELECT
-  USING (auth.role() = 'authenticated');
-
-CREATE POLICY "prompt_templates_update_auth"
-  ON public.prompt_templates FOR UPDATE
-  USING (auth.role() = 'authenticated');
-
--- ============================================
--- SEED: 3 templates par défaut
--- Optimisés SEO, Compliance & Tone of Voice PayFit
--- ============================================
-
-INSERT INTO public.prompt_templates (slug, name, system_prompt, user_prompt_template, variables, is_default)
-VALUES
-(
-  'seo_standard',
-  'Article SEO Standard (800-1200 mots)',
-  'Tu es un rédacteur expert en droit social, paie et RH françaises, intégré à l''équipe Content de PayFit — la solution de paie et RH automatisée n°1 en France pour les TPE et PME.
+-- 1. Update seo_standard
+UPDATE public.prompt_templates
+SET
+  system_prompt = 'Tu es un rédacteur expert en droit social, paie et RH françaises, intégré à l''équipe Content de PayFit — la solution de paie et RH automatisée n°1 en France pour les TPE et PME.
 
 === TONE OF VOICE PAYFIT ===
 Tu incarnes la voix PayFit. Ton écriture doit refléter ces valeurs :
@@ -66,7 +37,7 @@ Tu incarnes la voix PayFit. Ton écriture doit refléter ces valeurs :
 - Structure avec des listes à puces pour les éléments énumérables.
 - Chaque H2 doit pouvoir être compris indépendamment (Featured Snippet).
 - Optimise les FAQ pour les "People Also Ask" Google en posant des questions naturelles que l''ICP cible se poserait réellement.',
-  'Rédige un article SEO de 800 à 1200 mots sur le sujet suivant :
+  user_prompt_template = 'Rédige un article SEO de 800 à 1200 mots sur le sujet suivant :
 **Mot-clé principal** : {{keyword_primary}}
 **Mots-clés secondaires** : {{keywords_secondary}}
 **ICP cible** : {{icp_target}}
@@ -102,13 +73,13 @@ Règles de formatage :
 - PAS de "Introduction", "Conclusion" comme titres de section
 
 Réponds uniquement avec l''article en markdown. Pas d''introduction ni de commentaire autour.',
-  ARRAY['keyword_primary', 'keywords_secondary', 'icp_target'],
-  true
-),
-(
-  'news_flash',
-  'Brève Actualité Paie (400 mots)',
-  'Tu es un rédacteur expert en droit social, paie et RH françaises, intégré à l''équipe Content de PayFit — la solution de paie et RH automatisée n°1 en France pour les TPE et PME.
+  updated_at = now()
+WHERE slug = 'seo_standard';
+
+-- 2. Update news_flash
+UPDATE public.prompt_templates
+SET
+  system_prompt = 'Tu es un rédacteur expert en droit social, paie et RH françaises, intégré à l''équipe Content de PayFit — la solution de paie et RH automatisée n°1 en France pour les TPE et PME.
 
 === TONE OF VOICE PAYFIT ===
 - **Clarté et pédagogie** : tu vulgarises le droit social sans le simplifier à l''excès.
@@ -126,7 +97,7 @@ Réponds uniquement avec l''article en markdown. Pas d''introduction ni de comme
 === CIBLES ===
 - ICP 1 : Dirigeant(e) TPE (1-9 salariés), peu de temps, cherche la conformité.
 - ICP 2 : Responsable RH PME (10-50 salariés), cherche l''efficacité et la veille.',
-  'Rédige une actualité "Flash Paie" de 400 mots maximum sur le sujet suivant :
+  user_prompt_template = 'Rédige une actualité "Flash Paie" de 400 mots maximum sur le sujet suivant :
 **Sujet principal** : {{keyword_primary}}
 **Mots-clés secondaires** : {{keywords_secondary}}
 **Cible** : {{icp_target}}
@@ -147,13 +118,13 @@ Règles de formatage :
 - PAS d''emojis
 
 Réponds uniquement en markdown sans intro ni commentaire.',
-  ARRAY['keyword_primary', 'keywords_secondary', 'icp_target'],
-  false
-),
-(
-  'auto_trend',
-  'Article auto depuis tendance',
-  'Tu es un rédacteur expert en droit social, paie et RH françaises, intégré à l''équipe Content de PayFit — la solution de paie et RH automatisée n°1 en France pour les TPE et PME.
+  updated_at = now()
+WHERE slug = 'news_flash';
+
+-- 3. Update auto_trend
+UPDATE public.prompt_templates
+SET
+  system_prompt = 'Tu es un rédacteur expert en droit social, paie et RH françaises, intégré à l''équipe Content de PayFit — la solution de paie et RH automatisée n°1 en France pour les TPE et PME.
 
 === TONE OF VOICE PAYFIT ===
 - **Clarté et pédagogie** : tu vulgarises le droit social sans le simplifier à l''excès. Tu rends accessible ce qui est complexe.
@@ -171,7 +142,7 @@ Réponds uniquement en markdown sans intro ni commentaire.',
 === CIBLES ===
 - ICP 1 : Dirigeant(e) TPE (1-9 salariés), peu de temps, peu de connaissances RH, cherche conformité et simplicité.
 - ICP 2 : Responsable RH / Office Manager PME (10-50 salariés), cherche efficacité, automatisation et veille.',
-  'Rédige un article SEO de 800 à 1200 mots sur le sujet suivant :
+  user_prompt_template = 'Rédige un article SEO de 800 à 1200 mots sur le sujet suivant :
 **Mot-clé principal** : {{keyword_primary}}
 **Mots-clés secondaires** : {{keywords_secondary}}
 **ICP cible** : {{icp_target}}
@@ -209,6 +180,5 @@ Règles de formatage :
 - PAS de tableaux, code, emojis, "Introduction"/"Conclusion" comme titres
 
 Réponds uniquement avec l''article en markdown. Pas d''introduction ni de commentaire autour.',
-  ARRAY['keyword_primary', 'keywords_secondary', 'icp_target', 'signal', 'source'],
-  false
-);
+  updated_at = now()
+WHERE slug = 'auto_trend';

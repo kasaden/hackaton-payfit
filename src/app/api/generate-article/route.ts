@@ -72,8 +72,24 @@ export async function POST(request: NextRequest) {
     }
 
     // Fetch prompt template from DB (fallback to hardcoded if DB fails)
-    const FALLBACK_SYSTEM_PROMPT = `Tu es un rédacteur SEO expert en droit social et paie française, travaillant pour PayFit, le leader français de la gestion de paie automatisée pour TPE/PME. Tu rédiges des articles de blog destinés au site payfit.com/fr/fiches-pratiques/.
-Ton style est : professionnel mais accessible, pédagogique sans être condescendant, concret et actionnable. Tu t'adresses à des dirigeants de TPE (1-9 salariés) et des responsables RH de PME (10-50 salariés). Tu cites toujours tes sources légales (articles du Code du travail, directives européennes, textes URSSAF). Tu n'inventes jamais de donnée chiffrée.`
+    const FALLBACK_SYSTEM_PROMPT = `Tu es un rédacteur expert en droit social, paie et RH françaises, intégré à l'équipe Content de PayFit — la solution de paie et RH automatisée n°1 en France pour les TPE et PME.
+
+TONE OF VOICE PAYFIT :
+- Clarté et pédagogie : tu vulgarises le droit social sans le simplifier à l'excès. Tu rends accessible ce qui est complexe.
+- Expertise de confiance : chaque affirmation est sourcée, chaque conseil est actionnable.
+- Proximité professionnelle : vouvoiement chaleureux. Tu parles de "vos salariés", "votre entreprise", "votre bulletin de paie".
+- Posture de partenaire : PayFit accompagne, ne vend pas. "PayFit vous accompagne" plutôt que "PayFit propose".
+- Concret et actionnable : chaque section apporte une valeur pratique.
+
+COMPLIANCE :
+- Cite systématiquement les sources légales (Code du travail, CSS, directives EU, URSSAF, décrets).
+- N'invente JAMAIS de données chiffrées. Formulations conditionnelles si incertain.
+- Précise les dates d'application. Distingue : en projet / voté / en vigueur.
+- Intègre "sous réserve de publication du décret d'application" quand pertinent.
+
+CIBLES :
+- ICP 1 : Dirigeant(e) TPE (1-9 salariés), cherche conformité et simplicité.
+- ICP 2 : Responsable RH PME (10-50 salariés), cherche efficacité et veille.`
 
     const template = await getPromptTemplate(template_slug || 'seo_standard')
     const systemPrompt = template?.system_prompt || FALLBACK_SYSTEM_PROMPT
@@ -115,9 +131,18 @@ Ton style est : professionnel mais accessible, pédagogique sans être condescen
       .split(/\s+/)
       .filter((word: string) => word.length > 0).length
 
-    const lines = content_markdown.split('\n').filter((l: string) => l.trim() !== '')
-    const introLine = lines.length > 1 ? lines[1] : title
-    const meta_description = introLine.substring(0, 160)
+    // Generate SEO meta description: use intro paragraph, strip markdown, limit to 155 chars
+    const nonEmptyLines = content_markdown.split('\n').filter((l: string) => l.trim() !== '')
+    const introLines = nonEmptyLines
+      .filter((l: string) => !l.startsWith('#') && !l.startsWith('-') && !l.startsWith('*'))
+      .slice(0, 2)
+    const rawIntro = introLines.join(' ')
+      .replace(/\*\*/g, '')
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+      .trim()
+    const meta_description = rawIntro.length > 155
+      ? rawIntro.substring(0, 152) + '...'
+      : rawIntro || title
 
     const supabase = createServiceClient()
 

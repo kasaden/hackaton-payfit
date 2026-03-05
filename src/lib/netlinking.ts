@@ -48,11 +48,15 @@ export function buildNetlinkingPromptSection(articles: InternalLink[]): string {
 
   return `
 
-Maillage interne (IMPORTANT pour le SEO) :
-Voici les articles déjà publiés sur le blog. Tu DOIS insérer entre 2 et 4 liens internes vers ces articles, de manière naturelle dans le corps du texte (PAS dans la FAQ, PAS dans un bloc séparé).
-Utilise la syntaxe markdown pour les liens : [texte ancre pertinent](/articles/slug-de-larticle)
-Le texte ancre doit être naturel et contextuel (pas "cliquez ici", mais une expression qui s'intègre dans la phrase).
-Ne lie que vers des articles réellement pertinents par rapport au sujet traité.
+=== MAILLAGE INTERNE (IMPORTANT pour le SEO) ===
+Voici les articles déjà publiés sur le blog PayFit. Tu DOIS insérer entre 2 et 4 liens internes vers ces articles.
+
+Règles de maillage :
+1. **Placement naturel** : insère les liens dans le corps des sections H2, de manière fluide dans le texte. PAS dans la FAQ, PAS dans un bloc séparé, PAS dans l'introduction.
+2. **Texte ancre optimisé SEO** : utilise comme texte ancre le mot-clé principal de l'article lié ou une variante naturelle (PAS "cliquez ici", PAS "en savoir plus", PAS le titre complet).
+3. **Pertinence thématique** : ne lie que vers des articles thématiquement proches. Un article sur le SMIC peut lier vers un article sur le bulletin de paie, mais pas vers un article sur les congés payés sans raison.
+4. **Syntaxe markdown** : [texte ancre](/articles/slug-de-larticle)
+5. **Répartition** : répartis les liens sur différentes sections, pas tous au même endroit.
 
 Articles existants :
 ${articleList}`
