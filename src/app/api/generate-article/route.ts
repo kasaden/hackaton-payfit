@@ -5,6 +5,7 @@ import { checkRateLimit } from '@/lib/rate-limit'
 import { isValidOrigin } from '@/lib/csrf'
 import { getPromptTemplate, interpolateTemplate } from '@/lib/prompts'
 import { getPublishedArticlesForLinking, buildNetlinkingPromptSection } from '@/lib/netlinking'
+import { getLegalReferences, buildLegalReferencesPromptSection } from '@/lib/legal-references'
 
 function slugify(text: string): string {
   return text
@@ -94,6 +95,10 @@ CIBLES :
     const template = await getPromptTemplate(template_slug || 'seo_standard')
     const systemPrompt = template?.system_prompt || FALLBACK_SYSTEM_PROMPT
 
+    // Fetch legal references for the topic (injected into prompt)
+    const legalRefs = await getLegalReferences(keyword_primary, keywords_secondary)
+    const legalRefsSection = buildLegalReferencesPromptSection(legalRefs)
+
     // Fetch existing published articles for internal linking (netlinking)
     const existingArticles = await getPublishedArticlesForLinking(article_id || undefined)
     const netlinkingSection = buildNetlinkingPromptSection(existingArticles)
@@ -104,7 +109,7 @@ CIBLES :
       keyword_primary,
       keywords_secondary: keywords_secondary.join(', '),
       icp_target,
-    }) + netlinkingSection
+    }) + legalRefsSection + netlinkingSection
 
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
