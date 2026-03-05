@@ -75,20 +75,38 @@ export async function POST(request: NextRequest) {
     // Fetch prompt template from DB (fallback to hardcoded if DB fails)
     const FALLBACK_SYSTEM_PROMPT = `Tu es un rédacteur expert en droit social, paie et RH françaises, intégré à l'équipe Content de PayFit — la solution de paie et RH automatisée n°1 en France pour les TPE et PME.
 
-TONE OF VOICE PAYFIT :
+=== TONE OF VOICE PAYFIT ===
+Tu incarnes la voix PayFit :
 - Clarté et pédagogie : tu vulgarises le droit social sans le simplifier à l'excès. Tu rends accessible ce qui est complexe.
 - Expertise de confiance : chaque affirmation est sourcée, chaque conseil est actionnable.
 - Proximité professionnelle : vouvoiement chaleureux. Tu parles de "vos salariés", "votre entreprise", "votre bulletin de paie".
 - Posture de partenaire : PayFit accompagne, ne vend pas. "PayFit vous accompagne" plutôt que "PayFit propose".
 - Concret et actionnable : chaque section apporte une valeur pratique.
 
-COMPLIANCE :
-- Cite systématiquement les sources légales (Code du travail, CSS, directives EU, URSSAF, décrets).
-- N'invente JAMAIS de données chiffrées. Formulations conditionnelles si incertain.
+=== PATTERNS D'ÉCRITURE PAYFIT ===
+1. Titres H2 = questions naturelles ("Qu'est-ce que... ?", "Comment... ?")
+2. Encadrés "> **Bon à savoir :** texte" (3-5 par article)
+3. Introduction : entre directement dans le sujet, termine par questions rhétoriques + "PayFit vous explique."
+4. Section PayFit : factuel et partenaire, 2-3 phrases max
+5. Profondeur : couvre TOUTES les distinctions juridiques, cas particuliers, exceptions
+6. Tableaux markdown pour les comparaisons quand pertinent
+
+=== ANTI-PATTERNS — INTERDIT ===
+- JAMAIS "peut sembler complexe pour de nombreux dirigeants"
+- JAMAIS "Cet article vous guide sur comment..."
+- JAMAIS "Chez PayFit, nous comprenons les défis"
+- JAMAIS "Définition / Contexte légal" comme titre H2
+- JAMAIS d'exemples chiffrés inventés ("environ 25%", "pourrait s'élever à...")
+- JAMAIS "Il est essentiel de...", "Il est crucial de...", "En effet,"
+
+=== COMPLIANCE ===
+- Cite systématiquement les sources légales précises (Code du travail, CSS, directives EU avec numéro, URSSAF, décrets).
+- N'invente JAMAIS de données chiffrées. Si un chiffre est incertain, OMETS-LE.
+- Vérifie la cohérence logique : n'applique JAMAIS une règle à un statut auquel elle ne correspond pas.
 - Précise les dates d'application. Distingue : en projet / voté / en vigueur.
 - Intègre "sous réserve de publication du décret d'application" quand pertinent.
 
-CIBLES :
+=== CIBLES ===
 - ICP 1 : Dirigeant(e) TPE (1-9 salariés), cherche conformité et simplicité.
 - ICP 2 : Responsable RH PME (10-50 salariés), cherche efficacité et veille.`
 
@@ -113,7 +131,7 @@ CIBLES :
     }) + netlinkingSection + legalRefsSection
 
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: 'gpt-4.1',
       temperature: 0.3,
       messages: [
         { role: 'system', content: systemPrompt },
@@ -129,8 +147,32 @@ CIBLES :
       )
     }
 
+    // Extract AI-generated meta description if present
+    const metaMatch = rawContent.match(/^META_DESCRIPTION:\s*(.+)$/m)
+    let meta_description: string
+    let cleanedContent: string
+
+    if (metaMatch) {
+      meta_description = metaMatch[1].trim().substring(0, 155)
+      cleanedContent = rawContent.replace(/^META_DESCRIPTION:.*$/m, '').trim()
+    } else {
+      cleanedContent = rawContent
+      // Fallback: extract from intro paragraph
+      const nonEmptyLines = rawContent.split('\n').filter((l: string) => l.trim() !== '')
+      const introLines = nonEmptyLines
+        .filter((l: string) => !l.startsWith('#') && !l.startsWith('-') && !l.startsWith('*') && !l.startsWith('>'))
+        .slice(0, 2)
+      const rawIntro = introLines.join(' ')
+        .replace(/\*\*/g, '')
+        .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+        .trim()
+      meta_description = rawIntro.length > 155
+        ? rawIntro.substring(0, 152) + '...'
+        : rawIntro || ''
+    }
+
     // 2ème passe IA : injecter des liens internes naturellement
-    const content_markdown = await injectNetlinkingWithAI(rawContent, existingArticles)
+    const content_markdown = await injectNetlinkingWithAI(cleanedContent, existingArticles)
 
     const firstLine = content_markdown.split('\n')[0]
     const title = firstLine.replace(/^#\s*/, '').trim()
@@ -140,18 +182,10 @@ CIBLES :
       .split(/\s+/)
       .filter((word: string) => word.length > 0).length
 
-    // Generate SEO meta description: use intro paragraph, strip markdown, limit to 155 chars
-    const nonEmptyLines = content_markdown.split('\n').filter((l: string) => l.trim() !== '')
-    const introLines = nonEmptyLines
-      .filter((l: string) => !l.startsWith('#') && !l.startsWith('-') && !l.startsWith('*'))
-      .slice(0, 2)
-    const rawIntro = introLines.join(' ')
-      .replace(/\*\*/g, '')
-      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
-      .trim()
-    const meta_description = rawIntro.length > 155
-      ? rawIntro.substring(0, 152) + '...'
-      : rawIntro || title
+    // Use title as ultimate fallback for meta_description
+    if (!meta_description) {
+      meta_description = title
+    }
 
     const supabase = createServiceClient()
 

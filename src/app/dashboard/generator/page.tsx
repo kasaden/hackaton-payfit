@@ -572,7 +572,7 @@ function GeneratorContent() {
                   </div>
                   <Badge
                     variant={
-                      wordCount >= 800 && wordCount <= 1200
+                      wordCount >= 1200 && wordCount <= 2000
                         ? "default"
                         : "destructive"
                     }
