@@ -20,6 +20,8 @@ import {
   ChevronDown,
   Copy,
   AlertTriangle,
+  Archive,
+  ArchiveRestore,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { titleSimilarity, keywordSimilarity } from "@/lib/similarity";
@@ -62,6 +64,7 @@ const statusConfig: Record<string, { label: string; className: string }> = {
   in_progress: { label: "En cours", className: "bg-yellow-100 text-yellow-700" },
   article_generated: { label: "Article généré", className: "bg-green-100 text-green-700" },
   published: { label: "Publiée", className: "bg-purple-100 text-purple-700" },
+  archived: { label: "Archivée", className: "bg-gray-100 text-gray-500" },
 };
 
 /** Calcule un score de similarité simplifié entre deux textes (titre/question) */
@@ -192,6 +195,15 @@ export function TrendTable({ trends, onTrendUpdated }: TrendTableProps) {
     }
   }
 
+  async function handleArchive(trendId: string, restore: boolean) {
+    const supabase = createClient();
+    await supabase
+      .from("trends")
+      .update({ status: restore ? "new" : "archived" })
+      .eq("id", trendId);
+    onTrendUpdated?.();
+  }
+
   async function handleAutoGenerate(trend: Trend) {
     setGeneratingId(trend.id);
     try {
@@ -222,7 +234,7 @@ export function TrendTable({ trends, onTrendUpdated }: TrendTableProps) {
   }
 
   return (
-    <div className="bg-white rounded-xl border overflow-hidden">
+    <div className="bg-white rounded-xl border overflow-x-auto">
       <Table>
         <TableHeader>
           <TableRow>
@@ -356,7 +368,28 @@ export function TrendTable({ trends, onTrendUpdated }: TrendTableProps) {
                         )}
                         Auto
                       </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-gray-400 hover:text-gray-600 hover:bg-gray-50 cursor-pointer"
+                        title="Archiver cette tendance"
+                        onClick={() => handleArchive(trend.id, false)}
+                      >
+                        <Archive className="w-4 h-4" />
+                      </Button>
                     </div>
+                  )}
+                  {trend.status === "archived" && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="text-[#0066CC] hover:text-[#004C99] cursor-pointer"
+                      title="Désarchiver cette tendance"
+                      onClick={() => handleArchive(trend.id, true)}
+                    >
+                      <ArchiveRestore className="w-4 h-4 mr-1" />
+                      Restaurer
+                    </Button>
                   )}
                 </TableCell>
               </TableRow>

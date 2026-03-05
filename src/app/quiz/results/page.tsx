@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { Suspense } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import {
   CheckCircle,
@@ -9,12 +9,41 @@ import {
   XCircle,
   ArrowRight,
   RotateCcw,
+  BookOpen,
 } from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { painPointLabels } from "@/data/quiz-questions";
+import { painPointLabels, painPointTopics, quizThemes } from "@/data/quiz-questions";
+import { createClient } from "@/lib/supabase/client";
+
+interface PublishedArticle {
+  slug: string;
+  title: string;
+  keyword_primary: string | null;
+}
+
+function findRelatedArticle(
+  topics: string[],
+  articles: PublishedArticle[]
+): PublishedArticle | null {
+  if (!topics.length || !articles.length) return null;
+  let best: PublishedArticle | null = null;
+  let bestScore = 0;
+  for (const article of articles) {
+    const haystack = `${article.title} ${article.keyword_primary || ""}`.toLowerCase();
+    let score = 0;
+    for (const topic of topics) {
+      if (haystack.includes(topic.toLowerCase())) score++;
+    }
+    if (score > bestScore) {
+      bestScore = score;
+      best = article;
+    }
+  }
+  return best;
+}
 
 function ResultsContent() {
   const searchParams = useSearchParams();
@@ -22,6 +51,24 @@ function ResultsContent() {
   const category = searchParams.get("category") || "warm";
   const size = searchParams.get("size") || "unknown";
   const pains = searchParams.get("pains")?.split(",").filter(Boolean) || [];
+  const themeId = searchParams.get("theme");
+  const currentTheme = themeId ? quizThemes.find((t) => t.id === themeId) : null;
+  const otherThemes = quizThemes.filter(
+    (t) => t.id !== "all" && t.id !== themeId
+  );
+
+  const [articles, setArticles] = useState<PublishedArticle[]>([]);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase
+      .from("articles")
+      .select("slug, title, keyword_primary")
+      .eq("is_published", true)
+      .then(({ data }) => {
+        if (data) setArticles(data);
+      });
+  }, []);
 
   const getScoreConfig = () => {
     if (score >= 70) {
@@ -144,17 +191,33 @@ function ResultsContent() {
               Points de vigilance identifiés
             </h3>
             <div className="space-y-3">
-              {pains.map((pain) => (
-                <div
-                  key={pain}
-                  className="flex items-start gap-3 p-3 bg-orange-50 rounded-lg"
-                >
-                  <div className="w-2 h-2 rounded-full bg-[#E65100] mt-2 shrink-0" />
-                  <p className="text-sm text-gray-700">
-                    {painPointLabels[pain] || pain}
-                  </p>
-                </div>
-              ))}
+              {pains.map((pain) => {
+                const topics = painPointTopics[pain] || [];
+                const related = findRelatedArticle(topics, articles);
+                return (
+                  <div
+                    key={pain}
+                    className="p-3 bg-orange-50 rounded-lg space-y-2"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="w-2 h-2 rounded-full bg-[#E65100] mt-2 shrink-0" />
+                      <p className="text-sm text-gray-700">
+                        {painPointLabels[pain] || pain}
+                      </p>
+                    </div>
+                    {related && (
+                      <Link
+                        href={`/articles/${related.slug}`}
+                        target="_blank"
+                        className="flex items-center gap-2 text-xs text-[#0066CC] hover:underline ml-5"
+                      >
+                        <BookOpen className="w-3.5 h-3.5 shrink-0" />
+                        {related.title}
+                      </Link>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </Card>
         )}
@@ -190,6 +253,37 @@ function ResultsContent() {
             </p>
           )}
         </Card>
+
+        {/* Autres quiz thématiques */}
+        {otherThemes.length > 0 && (
+          <Card className="p-6 mb-8">
+            <h3 className="font-semibold text-lg mb-3">
+              {currentTheme
+                ? "Testez aussi nos autres quiz"
+                : "Approfondissez par thème"}
+            </h3>
+            <div className="grid gap-2">
+              {otherThemes.map((theme) => (
+                <Link
+                  key={theme.id}
+                  href="/quiz"
+                  className="flex items-center gap-3 p-3 rounded-lg border border-gray-100 hover:border-[#0066CC] hover:bg-blue-50/30 transition-all"
+                >
+                  <span className="text-lg">{theme.emoji}</span>
+                  <div className="flex-1">
+                    <span className="text-sm font-medium text-[#152330]">
+                      {theme.title}
+                    </span>
+                    <span className="text-xs text-gray-400 ml-2">
+                      {theme.questionIds.length + 1} questions
+                    </span>
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-gray-300" />
+                </Link>
+              ))}
+            </div>
+          </Card>
+        )}
 
         {/* CTA */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center">

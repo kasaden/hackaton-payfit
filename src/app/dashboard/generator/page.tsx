@@ -583,8 +583,8 @@ function GeneratorContent() {
                 <Textarea
                   value={editedContent}
                   onChange={(e) => setEditedContent(e.target.value)}
-                  rows={20}
-                  className="font-mono text-sm"
+                  rows={24}
+                  className="font-mono text-xs leading-relaxed"
                 />
               </Card>
 
@@ -594,35 +594,35 @@ function GeneratorContent() {
                   <Eye className="w-4 h-4" />
                   Aperçu
                 </h3>
-                <div className="prose prose-sm max-w-none">
+                <div className="max-w-none text-sm leading-relaxed">
                   {editedContent.split("\n").map((line, i) => {
                     if (line.startsWith("# "))
                       return (
-                        <h1 key={i} className="text-2xl font-bold mb-2">
+                        <h1 key={i} className="text-lg font-bold mb-2">
                           {line.slice(2)}
                         </h1>
                       );
                     if (line.startsWith("## "))
                       return (
-                        <h2 key={i} className="text-xl font-semibold mt-6 mb-2">
+                        <h2 key={i} className="text-base font-semibold mt-5 mb-1.5">
                           {line.slice(3)}
                         </h2>
                       );
                     if (line.startsWith("### "))
                       return (
-                        <h3 key={i} className="text-lg font-medium mt-4 mb-1">
+                        <h3 key={i} className="text-sm font-semibold mt-3 mb-1">
                           {line.slice(4)}
                         </h3>
                       );
                     if (line.startsWith("- "))
                       return (
-                        <li key={i} className="ml-4">
+                        <li key={i} className="ml-4 text-sm">
                           {line.slice(2)}
                         </li>
                       );
                     if (line.trim() === "") return <br key={i} />;
                     return (
-                      <p key={i} className="mb-2 text-gray-700">
+                      <p key={i} className="mb-1.5 text-gray-700 text-sm">
                         {line}
                       </p>
                     );

@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 import { Card } from "@/components/ui/card";
 import {
   Table,
@@ -10,6 +12,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { TrendingUp, Check, Loader2 } from "lucide-react";
 import {
   PieChart,
   Pie,
@@ -50,7 +54,76 @@ const LEAD_LABELS: Record<string, string> = {
   cold: "Leads froids",
 };
 
+const painPointSuggestions: Record<string, { question: string; format: string }> = {
+  paie_manuelle: { question: "Comment automatiser sa gestion de paie en 2026 ?", format: "Article + comparatif" },
+  paie_confusion: { question: "Quel logiciel de paie choisir pour sa PME ?", format: "Article + checklist" },
+  miseajour_retard: { question: "Changements paie 2026 : taux, SMIC et RGDU à mettre à jour", format: "Article + FAQ" },
+  veille_absente: { question: "Veille légale paie 2026 : les changements à ne pas rater", format: "Article + checklist" },
+  transparence_nonpret: { question: "Directive transparence salariale 2026 : comment se préparer ?", format: "Article + FAQ" },
+  transparence_meconnaissance: { question: "Transparence salariale : quelles obligations pour les TPE-PME ?", format: "Article + FAQ" },
+  transparence_inconnu: { question: "Comprendre la directive européenne sur la transparence des salaires", format: "Article + FAQ" },
+  conges_confusion: { question: "Comment calculer les congés payés de ses salariés en 2026 ?", format: "Article + calculateur" },
+  conges_maladie_manuel: { question: "Acquisition de congés payés pendant un arrêt maladie : la règle 2026", format: "Article + FAQ" },
+  conges_maladie_inconnu: { question: "Arrêt maladie et congés payés : obligations employeur 2026", format: "Article + FAQ" },
+  conges_10eme_manuel: { question: "Maintien de salaire vs règle du 10ème : quelle méthode appliquer ?", format: "Article + calculateur" },
+  conges_10eme_inconnu: { question: "Indemnité de congés payés : comparaison maintien vs 10ème", format: "Article + calculateur" },
+  rupture_conv_erreur: { question: "Rupture conventionnelle 2026 : nouveau forfait social à 40%", format: "Article + FAQ" },
+  titres_resto_verif: { question: "Titres-restaurant 2026 : plafond d'exonération et règles", format: "Article + FAQ" },
+  conge_naissance_flou: { question: "Congé de naissance 2026 : durée, conditions et mise en place", format: "Article + FAQ" },
+  conge_naissance_inconnu: { question: "Le nouveau congé de naissance : ce que les employeurs doivent savoir", format: "Article + FAQ" },
+  tepa_complexe: { question: "Déduction forfaitaire TEPA sur heures supplémentaires : mode d'emploi", format: "Article + calculateur" },
+  tepa_inconnu: { question: "Heures supplémentaires : comment bénéficier de la réduction TEPA ?", format: "Article + FAQ" },
+  dsn_erreurs: { question: "Éviter les erreurs DSN : guide complet pour les PME", format: "Article + checklist" },
+  dsn_incertitude: { question: "DSN mensuelle : obligations et bonnes pratiques 2026", format: "Article + FAQ" },
+};
+
 export function QuizAnalyticsCharts({ quizResults }: QuizAnalyticsChartsProps) {
+  const [createdTrends, setCreatedTrends] = useState<Set<string>>(new Set());
+  const [loadingPain, setLoadingPain] = useState<string | null>(null);
+
+  async function handleCreateTrend(painKey: string, count: number) {
+    const suggestion = painPointSuggestions[painKey];
+    if (!suggestion) return;
+
+    setLoadingPain(painKey);
+    try {
+      const supabase = createClient();
+
+      // Vérifier qu'une tendance similaire n'existe pas déjà
+      const { data: existing } = await supabase
+        .from("trends")
+        .select("id")
+        .eq("source", "Quiz Analytics")
+        .ilike("question", `%${suggestion.question.slice(0, 30)}%`)
+        .limit(1);
+
+      if (existing && existing.length > 0) {
+        setCreatedTrends((prev) => new Set(prev).add(painKey));
+        return;
+      }
+
+      const volumeScore = count >= 10 ? 5 : count >= 7 ? 4 : count >= 4 ? 3 : count >= 2 ? 2 : 1;
+
+      await supabase.from("trends").insert({
+        question: suggestion.question,
+        source: "Quiz Analytics",
+        signal: `Pain point détecté chez ${count} répondant${count > 1 ? "s" : ""} (${Math.round((count / quizResults.length) * 100)}% des quiz)`,
+        score_novelty: 3,
+        score_payfit_relevance: 4,
+        score_volume: volumeScore,
+        icp_target: "ICP 1+2",
+        suggested_format: suggestion.format,
+        status: "new",
+      });
+
+      setCreatedTrends((prev) => new Set(prev).add(painKey));
+    } catch (e) {
+      console.error("Erreur création tendance:", e);
+    } finally {
+      setLoadingPain(null);
+    }
+  }
+
   if (quizResults.length === 0) {
     return (
       <div className="bg-white rounded-xl border p-12 text-center text-gray-500">
@@ -137,12 +210,16 @@ export function QuizAnalyticsCharts({ quizResults }: QuizAnalyticsChartsProps) {
           <h3 className="font-semibold mb-4">
             Pain points les plus fréquents
           </h3>
+          <p className="text-sm text-gray-500 mb-4">
+            Créez automatiquement des tendances à partir des problèmes les plus courants pour alimenter votre stratégie de contenu.
+          </p>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-16">#</TableHead>
+                <TableHead className="w-12">#</TableHead>
                 <TableHead>Problème identifié</TableHead>
                 <TableHead className="w-24 text-right">Occurrences</TableHead>
+                <TableHead className="w-44 text-right">Action</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -166,6 +243,31 @@ export function QuizAnalyticsCharts({ quizResults }: QuizAnalyticsChartsProps) {
                     >
                       {count}
                     </Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {painPointSuggestions[pain] ? (
+                      createdTrends.has(pain) ? (
+                        <span className="inline-flex items-center gap-1 text-xs text-green-600">
+                          <Check className="w-3.5 h-3.5" />
+                          Tendance créée
+                        </span>
+                      ) : (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-xs h-7 cursor-pointer"
+                          disabled={loadingPain === pain}
+                          onClick={() => handleCreateTrend(pain, count)}
+                        >
+                          {loadingPain === pain ? (
+                            <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />
+                          ) : (
+                            <TrendingUp className="w-3.5 h-3.5 mr-1" />
+                          )}
+                          Créer tendance
+                        </Button>
+                      )
+                    ) : null}
                   </TableCell>
                 </TableRow>
               ))}

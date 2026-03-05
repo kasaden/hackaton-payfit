@@ -116,16 +116,21 @@ export default function TrendsPage() {
     fetchTrends();
   }
 
+  const hiddenFromAll = ["archived", "article_generated", "published"];
+
   const filteredTrends =
-    filter === "all" ? trends : trends.filter((t) => t.status === filter);
+    filter === "all"
+      ? trends.filter((t) => !hiddenFromAll.includes(t.status))
+      : trends.filter((t) => t.status === filter);
 
   const statusCounts = {
-    all: trends.length,
+    all: trends.filter((t) => !hiddenFromAll.includes(t.status)).length,
     new: trends.filter((t) => t.status === "new").length,
     in_progress: trends.filter((t) => t.status === "in_progress").length,
     article_generated: trends.filter((t) => t.status === "article_generated")
       .length,
     published: trends.filter((t) => t.status === "published").length,
+    archived: trends.filter((t) => t.status === "archived").length,
   };
 
   if (loading) {
@@ -138,7 +143,7 @@ export default function TrendsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 min-w-0">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Tendances détectées</h1>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -239,6 +244,7 @@ export default function TrendsPage() {
             ["in_progress", "En cours"],
             ["article_generated", "Article généré"],
             ["published", "Publiées"],
+            ["archived", "Archivées"],
           ] as const
         ).map(([key, label]) => (
           <Button
