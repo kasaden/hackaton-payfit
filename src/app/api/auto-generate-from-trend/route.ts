@@ -4,6 +4,7 @@ import { openai } from '@/lib/openai'
 import { isValidOrigin } from '@/lib/csrf'
 import { checkRateLimit } from '@/lib/rate-limit'
 import { getPromptTemplate, interpolateTemplate } from '@/lib/prompts'
+import { getPublishedArticlesForLinking, buildNetlinkingPromptSection } from '@/lib/netlinking'
 
 function slugify(text: string): string {
   return text
@@ -88,6 +89,10 @@ Règles GEO (Generative Engine Optimization) :
 
 Réponds uniquement avec l'article en markdown. Pas d'introduction ni de commentaire autour.`
 
+    // Fetch existing published articles for internal linking (netlinking)
+    const existingArticles = await getPublishedArticlesForLinking()
+    const netlinkingSection = buildNetlinkingPromptSection(existingArticles)
+
     const template = await getPromptTemplate('auto_trend')
     const systemPrompt = template?.system_prompt || FALLBACK_SYSTEM_PROMPT
     const userPrompt = interpolateTemplate(template?.user_prompt_template || FALLBACK_USER_PROMPT, {
@@ -96,7 +101,7 @@ Réponds uniquement avec l'article en markdown. Pas d'introduction ni de comment
       icp_target: trend.icp_target || 'ICP 1+2',
       signal: trend.signal || '',
       source: trend.source || '',
-    })
+    }) + netlinkingSection
 
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o-mini',

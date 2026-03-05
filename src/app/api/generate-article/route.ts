@@ -4,6 +4,7 @@ import { openai } from '@/lib/openai'
 import { checkRateLimit } from '@/lib/rate-limit'
 import { isValidOrigin } from '@/lib/csrf'
 import { getPromptTemplate, interpolateTemplate } from '@/lib/prompts'
+import { getPublishedArticlesForLinking, buildNetlinkingPromptSection } from '@/lib/netlinking'
 
 function slugify(text: string): string {
   return text
@@ -77,13 +78,17 @@ Ton style est : professionnel mais accessible, pédagogique sans être condescen
     const template = await getPromptTemplate(template_slug || 'seo_standard')
     const systemPrompt = template?.system_prompt || FALLBACK_SYSTEM_PROMPT
 
+    // Fetch existing published articles for internal linking (netlinking)
+    const existingArticles = await getPublishedArticlesForLinking(article_id || undefined)
+    const netlinkingSection = buildNetlinkingPromptSection(existingArticles)
+
     // custom_prompt from the generator UI overrides the DB template
     const userPromptTemplate = custom_prompt || template?.user_prompt_template || custom_prompt
     const userPrompt = interpolateTemplate(userPromptTemplate || '', {
       keyword_primary,
       keywords_secondary: keywords_secondary.join(', '),
       icp_target,
-    })
+    }) + netlinkingSection
 
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
