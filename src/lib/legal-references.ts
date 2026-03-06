@@ -166,12 +166,13 @@ Voici les textes de loi et références légales vérifiées et applicables au s
 Tu DOIS t'appuyer sur ces sources pour rédiger l'article. Cite-les entre parenthèses dans le texte.
 
 RÈGLES D'UTILISATION :
-1. Cite le code de référence exact tel qu'indiqué, entre parenthèses dans le texte (ex: "(article L.3231-2 du Code du travail)")
-2. Utilise les extraits fournis comme base factuelle — ne modifie PAS les chiffres ou les dates
-3. N'insère PAS de liens URL (https://...) dans l'article. Les sources se citent par leur code de référence uniquement (ex: "article L.3231-2", "décret n°2016-1567", "directive 2023/970")
+1. Cite le code de référence exact tel qu'indiqué et crée un lien markdown vers l'URL officielle fournie (ex: "[article L.3231-2 du Code du travail](https://www.legifrance.gouv.fr/...)")
+2. Si aucune URL n'est fournie pour une référence, cite-la entre parenthèses sans lien (ex: "(article L.3231-2 du Code du travail)")
+3. Utilise les extraits fournis comme base factuelle — ne modifie PAS les chiffres ou les dates
 4. Indique le statut quand ce n'est pas "en vigueur" (ex: "en projet", "voté, transposition avant le...")
-5. N'invente PAS d'autres références légales au-delà de celles fournies ici. Si tu as besoin d'une source que tu ne trouves pas dans cette liste, utilise une formulation conditionnelle ("conformément aux dispositions en vigueur")
+5. N'invente PAS d'autres références légales ni d'autres URLs au-delà de celles fournies ici. Si tu as besoin d'une source que tu ne trouves pas dans cette liste, utilise une formulation conditionnelle ("conformément aux dispositions en vigueur")
 6. IMPORTANT : ces règles concernent uniquement les sources LÉGALES. Les liens internes vers d'autres articles du blog ([texte](/articles/slug)) sont une consigne SÉPARÉE et DOIVENT être insérés normalement dans le texte
+7. N'invente JAMAIS une URL. Utilise UNIQUEMENT les URLs fournies ci-dessous
 
 `
 
@@ -180,8 +181,9 @@ RÈGLES D'UTILISATION :
     for (const ref of refs) {
       const statusLabel = ref.status !== 'en_vigueur' ? ` [${ref.status.toUpperCase()}]` : ''
       const dateLabel = ref.applicable_date ? ` (applicable depuis le ${ref.applicable_date})` : ''
+      const urlLabel = ref.url ? `\n  URL officielle : ${ref.url}` : ''
       section += `• ${ref.reference_code} (${ref.reference_type.replace(/_/g, ' ')})${statusLabel}${dateLabel}\n`
-      section += `  "${ref.title}"\n`
+      section += `  "${ref.title}"${urlLabel}\n`
       section += `  ${ref.content_excerpt}\n\n`
     }
   }

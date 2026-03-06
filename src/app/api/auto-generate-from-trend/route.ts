@@ -5,6 +5,7 @@ import { isValidOrigin } from '@/lib/csrf'
 import { checkRateLimit } from '@/lib/rate-limit'
 import { getPromptTemplate, interpolateTemplate } from '@/lib/prompts'
 import { getPublishedArticlesForLinking, buildNetlinkingPromptSection, injectNetlinkingWithAI } from '@/lib/netlinking'
+import { getLegalReferences, buildLegalReferencesPromptSection } from '@/lib/legal-references'
 
 function slugify(text: string): string {
   return text
@@ -93,6 +94,10 @@ Réponds uniquement avec l'article en markdown. Pas d'introduction ni de comment
     const existingArticles = await getPublishedArticlesForLinking()
     const netlinkingSection = buildNetlinkingPromptSection(existingArticles)
 
+    // Fetch legal references for the topic (injected into prompt)
+    const legalRefs = await getLegalReferences(keyword_primary, keywords_secondary)
+    const legalRefsSection = buildLegalReferencesPromptSection(legalRefs)
+
     const template = await getPromptTemplate('auto_trend')
     const systemPrompt = template?.system_prompt || FALLBACK_SYSTEM_PROMPT
     const userPrompt = interpolateTemplate(template?.user_prompt_template || FALLBACK_USER_PROMPT, {
@@ -101,10 +106,10 @@ Réponds uniquement avec l'article en markdown. Pas d'introduction ni de comment
       icp_target: trend.icp_target || 'ICP 1+2',
       signal: trend.signal || '',
       source: trend.source || '',
-    }) + netlinkingSection
+    }) + netlinkingSection + legalRefsSection
 
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: 'gpt-4.1',
       temperature: 0.3,
       messages: [
         { role: 'system', content: systemPrompt },

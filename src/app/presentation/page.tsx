@@ -315,13 +315,13 @@ function Demo() {
     },
     {
       src: "/screenshots/generateur-articles.png",
-      label: "Générateur 3 passes",
+      label: "Génération du texte en 3 passes : structure, contenu, SEO",
       tag: "Génération",
       color: "#10B981",
     },
     {
       src: "/screenshots/article-publie-seo.png",
-      label: "Article SEO complet",
+      label: "Article SEO complet : netlinking, legal, structuration, json-ld",
       tag: "Publication",
       color: "#0066CC",
     },
@@ -397,7 +397,7 @@ function Demo() {
                   Concurrence
                 </span>
                 <p className="text-base font-bold text-white">
-                  Factorial, Lucca, Cegid, Sage
+                  Benchmark : Factorial, Lucca, Cegid, Sage
                 </p>
               </div>
             </div>
@@ -685,7 +685,9 @@ function NextSteps() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="text-sm font-bold text-white">{f.title}</h3>
-                  <p className="text-xs text-white/40 leading-relaxed mt-0.5">{f.desc}</p>
+                  <p className="text-xs text-white/40 leading-relaxed mt-0.5">
+                    {f.desc}
+                  </p>
                 </div>
                 <span
                   className="text-[10px] font-bold px-2.5 py-1 rounded-full shrink-0"
