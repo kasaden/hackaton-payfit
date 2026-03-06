@@ -15,7 +15,11 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { painPointLabels, painPointTopics, quizThemes } from "@/data/quiz-questions";
+import {
+  painPointLabels,
+  painPointTopics,
+  quizThemes,
+} from "@/data/quiz-questions";
 import { createClient } from "@/lib/supabase/client";
 
 interface PublishedArticle {
@@ -26,13 +30,14 @@ interface PublishedArticle {
 
 function findRelatedArticle(
   topics: string[],
-  articles: PublishedArticle[]
+  articles: PublishedArticle[],
 ): PublishedArticle | null {
   if (!topics.length || !articles.length) return null;
   let best: PublishedArticle | null = null;
   let bestScore = 0;
   for (const article of articles) {
-    const haystack = `${article.title} ${article.keyword_primary || ""}`.toLowerCase();
+    const haystack =
+      `${article.title} ${article.keyword_primary || ""}`.toLowerCase();
     let score = 0;
     for (const topic of topics) {
       if (haystack.includes(topic.toLowerCase())) score++;
@@ -52,9 +57,11 @@ function ResultsContent() {
   const size = searchParams.get("size") || "unknown";
   const pains = searchParams.get("pains")?.split(",").filter(Boolean) || [];
   const themeId = searchParams.get("theme");
-  const currentTheme = themeId ? quizThemes.find((t) => t.id === themeId) : null;
+  const currentTheme = themeId
+    ? quizThemes.find((t) => t.id === themeId)
+    : null;
   const otherThemes = quizThemes.filter(
-    (t) => t.id !== "all" && t.id !== themeId
+    (t) => t.id !== "all" && t.id !== themeId,
   );
 
   const [articles, setArticles] = useState<PublishedArticle[]>([]);
@@ -121,7 +128,13 @@ function ResultsContent() {
       <header className="bg-white border-b">
         <div className="max-w-3xl mx-auto px-4 h-14 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <Image src="/logo-seo-copilot.png" alt="Logo" width={28} height={28} className="rounded-lg" />
+            <Image
+              src="/logo-seo-copilot.png"
+              alt="Logo"
+              width={28}
+              height={28}
+              className="rounded-lg"
+            />
             <span className="font-semibold text-sm">
               PayFit <span className="text-[#0066CC]">SEO Copilot</span>
             </span>
@@ -248,8 +261,8 @@ function ResultsContent() {
           {category === "cold" && (
             <p className="text-gray-700 text-sm leading-relaxed">
               Excellente maîtrise ! Pour aller encore plus loin, PayFit vous
-              permet d&apos;automatiser vos rapports de transparence salariale et
-              de préparer sereinement la directive européenne 2023/970.
+              permet d&apos;automatiser vos rapports de transparence salariale
+              et de préparer sereinement la directive européenne 2023/970.
             </p>
           )}
         </Card>
