@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import {
   Search,
   Code2,
@@ -18,8 +19,6 @@ import {
   Zap,
   Shield,
   PenTool,
-  ChevronRight,
-  ChevronLeft,
   ExternalLink,
   ImageIcon,
   BarChart3,
@@ -28,116 +27,22 @@ import {
   Sparkles,
   Lock,
   Languages,
+  Clock,
+  TrendingUp,
+  ChevronDown,
+  Play,
+  BookOpen,
+  Download,
+  Terminal,
 } from "lucide-react";
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { AnimatedSection } from "@/components/landing/AnimatedSection";
+import { CountUp } from "@/components/landing/CountUp";
 
 /* ================================================================
    HELPERS
    ================================================================ */
 
-function SectionLabel({ children, color = "text-[#0066CC]" }: { children: React.ReactNode; color?: string }) {
-  return <p className={`text-sm font-medium ${color} mb-2 tracking-wide uppercase`}>{children}</p>;
-}
-
-function SlideTitle({ children }: { children: React.ReactNode }) {
-  return <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-1">{children}</h2>;
-}
-
-function ScreenshotPlaceholder({ label = "Ajouter une capture d'écran", className = "", src }: { label?: string; className?: string; src?: string }) {
-  if (src) {
-    return (
-      <div className={`relative rounded-xl overflow-hidden border border-gray-200 ${className}`}>
-        <Image src={src} alt={label} fill className="object-contain" />
-      </div>
-    );
-  }
-  return (
-    <div className={`bg-gray-50 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center gap-3 ${className}`}>
-      <div className="w-12 h-12 rounded-xl bg-gray-200/60 flex items-center justify-center">
-        <ImageIcon className="w-6 h-6 text-gray-400" />
-      </div>
-      <p className="text-sm text-gray-400 font-medium">{label}</p>
-    </div>
-  );
-}
-
-function DemoLink({ href, children, external = false }: { href: string; children: React.ReactNode; external?: boolean }) {
-  if (external) {
-    return (
-      <a href={href} target="_blank" rel="noopener noreferrer">
-        <Button size="sm" className="bg-[#0066CC] hover:bg-[#004C99] text-white rounded-xl cursor-pointer gap-2">
-          {children}
-          <ExternalLink className="w-3.5 h-3.5" />
-        </Button>
-      </a>
-    );
-  }
-  return (
-    <Link href={href}>
-      <Button size="sm" className="bg-[#0066CC] hover:bg-[#004C99] text-white rounded-xl cursor-pointer gap-2">
-        {children}
-        <ArrowRight className="w-3.5 h-3.5" />
-      </Button>
-    </Link>
-  );
-}
-
-function MiniCard({
-  icon: Icon,
-  title,
-  items,
-  accent = "#0066CC",
-  number,
-}: {
-  icon: React.ElementType;
-  title: string;
-  items: string[];
-  accent?: string;
-  number?: string;
-}) {
-  return (
-    <div className="bg-white rounded-2xl p-5 border border-gray-100 hover:shadow-md transition-all duration-300" style={{ borderTopColor: accent, borderTopWidth: 3 }}>
-      <div className="flex items-center gap-3 mb-3">
-        <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${accent}12` }}>
-          <Icon className="w-4.5 h-4.5" style={{ color: accent }} />
-        </div>
-        {number && <span className="text-xs font-mono" style={{ color: `${accent}99` }}>{number}</span>}
-        <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
-      </div>
-      <ul className="space-y-1.5">
-        {items.map((item, i) => (
-          <li key={i} className="text-xs text-gray-500 flex items-start gap-2">
-            <span className="w-1 h-1 rounded-full mt-1.5 shrink-0" style={{ backgroundColor: accent }} />
-            {item}
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-/* ================================================================
-   SCREENSHOTS — Placez vos images dans /public/screenshots/
-   Noms attendus :
-     - n8n-dashboard.png
-     - scoring-trends.png
-     - generateur-articles.png
-     - article-publie-seo.png
-     - quiz-resultats.png
-     - veille-concurrentielle.png
-   ================================================================ */
-
-const SCREENSHOTS = {
-  n8n: "/screenshots/n8n-dashboard.png",
-  scoring: "/screenshots/scoring-trends.png",
-  generateur: "/screenshots/generateur-articles.png",
-  article: "/screenshots/article-publie-seo.png",
-  quiz: "/screenshots/quiz-resultats.png",
-  veille: "/screenshots/veille-concurrentielle.png",
-};
-
-/* On vérifie coté client si l'image existe, sinon on affiche le placeholder */
 function useImageExists(src: string) {
   const [exists, setExists] = useState(false);
   useEffect(() => {
@@ -151,580 +56,817 @@ function useImageExists(src: string) {
 
 function SmartScreenshot({ src, label, className = "" }: { src: string; label: string; className?: string }) {
   const exists = useImageExists(src);
-  return <ScreenshotPlaceholder label={label} className={className} src={exists ? src : undefined} />;
-}
-
-/* ================================================================
-   SLIDES
-   ================================================================ */
-
-function Slide1() {
-  return (
-    <div className="flex flex-col items-center justify-center text-center h-full">
-      <div className="inline-flex items-center gap-2 bg-[#0066CC]/5 text-[#0066CC] px-4 py-1.5 rounded-full text-sm font-medium mb-8">
-        <Shield className="w-4 h-4" />
-        Hackathon PayFit — Eugenia School 2026
+  if (exists) {
+    return (
+      <div className={`relative rounded-2xl overflow-hidden border border-gray-200 shadow-lg ${className}`}>
+        <Image src={src} alt={label} fill className="object-contain" />
       </div>
-      <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight mb-2">
-        SEO Copilot
-      </h1>
-      <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-[#0066CC] leading-tight mb-6">
-        for PayFit
-      </h1>
-      <p className="text-xl text-gray-500 max-w-xl mx-auto mb-8">
-        Détecter. Générer. Publier.<br />
-        <span className="font-semibold text-gray-700">Avant la concurrence.</span>
-      </p>
-      <div className="w-24 h-1 bg-[#0066CC] rounded-full" />
+    );
+  }
+  return (
+    <div className={`bg-gray-50 border-2 border-dashed border-gray-300 rounded-2xl flex flex-col items-center justify-center gap-3 ${className}`}>
+      <div className="w-12 h-12 rounded-xl bg-gray-200/60 flex items-center justify-center">
+        <ImageIcon className="w-6 h-6 text-gray-400" />
+      </div>
+      <p className="text-sm text-gray-400 font-medium">{label}</p>
     </div>
   );
 }
 
-function Slide2() {
+const SCREENSHOTS = {
+  n8n: "/screenshots/n8n-dashboard.png",
+  scoring: "/screenshots/scoring-trends.png",
+  generateur: "/screenshots/generateur-articles.png",
+  article: "/screenshots/article-publie-seo.png",
+  quiz: "/screenshots/quiz-resultats.png",
+  veille: "/screenshots/veille-concurrentielle.png",
+};
+
+/* ================================================================
+   SECTIONS
+   ================================================================ */
+
+function HeroSection() {
+  return (
+    <section className="relative min-h-[90vh] flex flex-col items-center justify-center text-center px-6 overflow-hidden">
+      {/* Background */}
+      <div className="absolute inset-0 hero-gradient" />
+      <div className="absolute inset-0 grid-pattern" />
+
+      {/* Floating decorative elements */}
+      <div className="absolute top-20 left-[10%] w-16 h-16 bg-[#0066CC]/5 rounded-2xl rotate-12 animate-float" />
+      <div className="absolute top-40 right-[15%] w-12 h-12 bg-[#F59E0B]/10 rounded-full animate-float-delayed" />
+      <div className="absolute bottom-32 left-[20%] w-10 h-10 bg-[#8B5CF6]/8 rounded-xl -rotate-12 animate-float-slow" />
+
+      <div className="relative z-10 max-w-4xl mx-auto">
+        <AnimatedSection variant="fadeDown" delay={0}>
+          <div className="inline-flex items-center gap-2 bg-[#0066CC]/8 text-[#0066CC] px-5 py-2 rounded-full text-sm font-semibold mb-8 border border-[#0066CC]/15">
+            <Shield className="w-4 h-4" />
+            Hackathon PayFit &mdash; Eugenia School 2026
+          </div>
+        </AnimatedSection>
+
+        <AnimatedSection variant="fadeUp" delay={100}>
+          <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold text-gray-900 leading-[1.1] mb-3 tracking-tight">
+            SEO Copilot
+          </h1>
+        </AnimatedSection>
+
+        <AnimatedSection variant="fadeUp" delay={200}>
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-[#0066CC] leading-[1.1] mb-8 tracking-tight">
+            for PayFit
+          </h2>
+        </AnimatedSection>
+
+        <AnimatedSection variant="fadeUp" delay={300}>
+          <p className="text-xl md:text-2xl text-gray-500 max-w-2xl mx-auto mb-4 leading-relaxed">
+            De la <span className="font-semibold text-gray-700">tendance</span> au{" "}
+            <span className="font-semibold text-gray-700">contenu publie</span>, en automatique.
+          </p>
+          <p className="text-lg text-gray-400 mb-10">
+            Un SaaS complet, construit de A a Z avec Claude Code.
+          </p>
+        </AnimatedSection>
+
+        <AnimatedSection variant="scaleUp" delay={400}>
+          <div className="flex flex-wrap justify-center gap-4 mb-14">
+            <Link href="/dashboard">
+              <Button size="lg" className="bg-[#0066CC] hover:bg-[#004C99] text-white rounded-xl cta-glow cursor-pointer gap-2 text-base px-8 h-12">
+                Voir le dashboard
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+            </Link>
+            <a href="/quiz" target="_blank" rel="noopener noreferrer">
+              <Button size="lg" variant="outline" className="rounded-xl cursor-pointer gap-2 text-base px-8 h-12 border-[#0066CC]/30 text-[#0066CC] hover:bg-[#0066CC]/5">
+                Tester le quiz
+                <ExternalLink className="w-4 h-4" />
+              </Button>
+            </a>
+          </div>
+        </AnimatedSection>
+
+        {/* Hero KPIs */}
+        <AnimatedSection variant="fadeUp" delay={500}>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto">
+            {[
+              { value: 8, suffix: "/jour", label: "Articles generes", color: "#0066CC" },
+              { value: 3, suffix: "h", prefix: "~", label: "Economisees / article", color: "#10B981" },
+              { value: 7, suffix: "$/mois", prefix: "~", label: "Cout infrastructure IA", color: "#F59E0B" },
+              { value: 20, suffix: "+/sem", label: "Tendances detectees", color: "#8B5CF6" },
+            ].map((kpi) => (
+              <div key={kpi.label} className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 border border-gray-100 shadow-sm">
+                <p className="text-2xl md:text-3xl font-bold" style={{ color: kpi.color }}>
+                  <CountUp end={kpi.value} prefix={kpi.prefix} suffix={kpi.suffix} />
+                </p>
+                <p className="text-xs text-gray-500 mt-1">{kpi.label}</p>
+              </div>
+            ))}
+          </div>
+        </AnimatedSection>
+      </div>
+
+      {/* Scroll indicator */}
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
+        <ChevronDown className="w-6 h-6 text-gray-300" />
+      </div>
+    </section>
+  );
+}
+
+function ProblemSection() {
   const problems = [
     {
       icon: FileText,
       number: "01",
-      title: "Volume vs Qualité",
-      desc: "Créer du contenu expert en masse sans nuire à la marque PayFit. Références légales obligatoires, ton pédagogique à maintenir.",
+      title: "Volume vs Qualite",
+      question: "Comment creer du contenu en masse tout en gardant un niveau expert en paie et RH ?",
+      items: [
+        "Equilibre volume / qualite impossible a maintenir manuellement",
+        "References legales obligatoires, ton de marque a respecter",
+        "L'IA generique produit du contenu generique — pas suffisant pour PayFit",
+      ],
       accent: "#F59E0B",
     },
     {
       icon: Search,
       number: "02",
       title: "Veille trop lente",
-      desc: "Factorial, Lucca, Cegid publient sur les mêmes mots-clés. Les tendances émergent vite — il faut réagir en heures, pas en semaines.",
+      question: "Comment detecter les questions emergentes RH/paie et publier avant la concurrence ?",
+      items: [
+        "Factorial, Lucca, Cegid, Sage publient sur les memes mots-cles",
+        "Les tendances emergent en heures, les equipes reagissent en semaines",
+        "Pas de systeme automatise de detection et priorisation",
+      ],
       accent: "#EF4444",
     },
     {
       icon: Code2,
       number: "03",
-      title: "Dépendance technique",
-      desc: "Quiz, simulateurs = dév nécessaire. L'équipe SEO doit être autonome. Outils no-code = rapidité de déploiement.",
+      title: "Dependance technique",
+      question: "Comment l'equipe SEO peut deployer des outils interactifs sans devs ?",
+      items: [
+        "Quiz, simulateurs, calculateurs = ressources dev necessaires",
+        "L'equipe SEO attend des sprints pour deployer du contenu interactif",
+        "Les nouveaux formats SEO (calculateurs) restent bloques",
+      ],
       accent: "#8B5CF6",
     },
   ];
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="mb-8">
-        <SectionLabel>Le constat</SectionLabel>
-        <SlideTitle>3 problèmes, 1 seule réponse</SlideTitle>
-      </div>
-      <div className="grid gap-5 flex-1 content-center">
-        {problems.map((p) => (
-          <div
-            key={p.number}
-            className="flex gap-5 bg-white rounded-2xl p-6 border border-gray-100 hover:shadow-md transition-all duration-300"
-            style={{ borderLeftWidth: 4, borderLeftColor: p.accent }}
-          >
-            <div className="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${p.accent}12` }}>
-              <p.icon className="w-6 h-6" style={{ color: p.accent }} />
-            </div>
-            <div>
-              <div className="flex items-center gap-3 mb-1">
-                <span className="text-xs font-mono" style={{ color: `${p.accent}99` }}>{p.number}</span>
-                <h3 className="text-base font-semibold text-gray-900">{p.title}</h3>
+    <section className="py-24 px-6 bg-gray-50/50" id="probleme">
+      <div className="max-w-5xl mx-auto">
+        <AnimatedSection variant="fadeUp">
+          <div className="text-center mb-16">
+            <p className="text-sm font-semibold text-[#EF4444] mb-3 tracking-wide uppercase">Le constat</p>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              3 problemes, 1 seule reponse
+            </h2>
+            <p className="text-lg text-gray-500 max-w-2xl mx-auto">
+              Les problematiques identifiees par David, SEO Manager chez PayFit
+            </p>
+          </div>
+        </AnimatedSection>
+
+        <div className="space-y-6">
+          {problems.map((p, i) => (
+            <AnimatedSection key={p.number} variant="fadeUp" delay={i * 150}>
+              <div
+                className="bg-white rounded-2xl p-8 border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300"
+                style={{ borderLeftWidth: 4, borderLeftColor: p.accent }}
+              >
+                <div className="flex items-start gap-5">
+                  <div className="flex-shrink-0 w-14 h-14 rounded-2xl flex items-center justify-center" style={{ backgroundColor: `${p.accent}12` }}>
+                    <p.icon className="w-7 h-7" style={{ color: p.accent }} />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <span className="text-xs font-mono px-2 py-0.5 rounded-md" style={{ color: p.accent, backgroundColor: `${p.accent}10` }}>{p.number}</span>
+                      <h3 className="text-lg font-bold text-gray-900">{p.title}</h3>
+                    </div>
+                    <p className="text-sm text-gray-600 mb-4 font-medium italic">{p.question}</p>
+                    <ul className="space-y-2">
+                      {p.items.map((item, j) => (
+                        <li key={j} className="text-sm text-gray-500 flex items-start gap-2">
+                          <span className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0" style={{ backgroundColor: p.accent }} />
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
               </div>
-              <p className="text-sm text-gray-500 leading-relaxed">{p.desc}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function Slide3() {
-  const steps = [
-    { icon: Search, title: "Veille auto", sub: "N8N — cycle 6h", items: ["5 sources en parallèle", "Légifrance, URSSAF, BOFIP", "People Also Ask", "Analyse gaps concurrents"], accent: "#F59E0B" },
-    { icon: Bot, title: "Scoring IA", sub: "GPT-4o-mini", items: ["3 axes : nouveauté, pertinence, volume", "Signal & source identifiés", "Score ≥ 4 = auto-génération"], accent: "#0066CC" },
-    { icon: PenTool, title: "Génération", sub: "GPT-4.1 — 3 passes", items: ["Article SEO complet", "Netlinking IA (pass 2)", "Références légales injectées", "Meta auto-extraites"], accent: "#10B981" },
-    { icon: Zap, title: "Publication", sub: "SEO-ready", items: ["JSON-LD (Article, FAQ, Org)", "Sitemap & robots dynamiques", "Canonical + OpenGraph", "Quiz lead magnet intégré"], accent: "#8B5CF6" },
-  ];
-
-  return (
-    <div className="h-full flex flex-col">
-      <div className="mb-6">
-        <SectionLabel>La solution</SectionLabel>
-        <SlideTitle>Un pipeline SEO entièrement automatisé</SlideTitle>
-      </div>
-      <div className="grid md:grid-cols-4 gap-4 flex-1 content-center">
-        {steps.map((s, i) => (
-          <div key={s.title} className="relative">
-            <MiniCard icon={s.icon} title={s.title} items={s.items} accent={s.accent} />
-            <p className="text-[10px] font-medium mt-1.5 ml-1" style={{ color: s.accent }}>{s.sub}</p>
-            {i < 3 && (
-              <div className="hidden md:flex absolute -right-3 top-1/2 -translate-y-1/2 z-10 w-6 h-6 items-center justify-center">
-                <ChevronRight className="w-4 h-4 text-gray-300" />
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-      <div className="flex justify-end mt-4">
-        <DemoLink href="/dashboard">Voir le dashboard</DemoLink>
-      </div>
-    </div>
-  );
-}
-
-function Slide4() {
-  const techs = [
-    { icon: Blocks, title: "Frontend", sub: "Next.js 16 + React 19", items: ["Tailwind CSS + shadcn/ui", "App Router (SSR)", "Déployé sur Vercel"], accent: "#0066CC" },
-    { icon: Database, title: "Backend", sub: "Supabase", items: ["PostgreSQL + RLS", "Auth SSR + Middleware", "Webhook sécurisé"], accent: "#10B981" },
-    { icon: Bot, title: "Intelligence Artificielle", sub: "OpenAI", items: ["GPT-4.1 (génération, t=0.3)", "GPT-4o-mini (scoring)", "Templates éditables en BDD"], accent: "#F59E0B" },
-    { icon: Workflow, title: "Automation No-Code", sub: "N8N Cloud", items: ["3 workflows automatisés", "Cycles 6h / 12h", "Webhooks + triggers"], accent: "#8B5CF6" },
-  ];
-
-  return (
-    <div className="h-full flex flex-col">
-      <div className="mb-6">
-        <SectionLabel>Architecture</SectionLabel>
-        <SlideTitle>Stack technique & parti pris</SlideTitle>
-      </div>
-      <div className="grid md:grid-cols-4 gap-4 flex-1 content-center">
-        {techs.map((t) => (
-          <div key={t.title}>
-            <MiniCard icon={t.icon} title={t.title} items={t.items} accent={t.accent} />
-            <p className="text-[10px] font-medium mt-1.5 ml-1" style={{ color: t.accent }}>{t.sub}</p>
-          </div>
-        ))}
-      </div>
-      <div className="mt-4 bg-gradient-to-r from-[#004C99] to-[#0066CC] rounded-xl p-4 text-center">
-        <p className="text-white font-semibold text-sm">
-          Coût total IA : <span className="text-lg">~7$/mois</span> &nbsp;•&nbsp; Reproductible &nbsp;•&nbsp; Scalable à l&apos;international
-        </p>
-      </div>
-    </div>
-  );
-}
-
-function Slide5() {
-  return (
-    <div className="h-full flex flex-col">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <SectionLabel color="text-emerald-600">Demo live</SectionLabel>
-          <SlideTitle>Veille automatisée & Détection de tendances</SlideTitle>
-        </div>
-        <DemoLink href="/dashboard/trends">Ouvrir les tendances</DemoLink>
-      </div>
-
-      <div className="grid md:grid-cols-2 gap-5 flex-1">
-        {/* Left — N8N */}
-        <div className="flex flex-col gap-4">
-          <MiniCard
-            icon={Workflow}
-            title="Workflow N8N — Cycle de 6h"
-            accent="#F59E0B"
-            items={[
-              "Légifrance JO RSS — nouvelles lois & décrets",
-              "BOFIP / URSSAF RSS — mises à jour fiscales",
-              "People Also Ask — questions émergentes Google",
-              "Analyse concurrents — gaps de contenu",
-              "Fusion multi-source + déduplication Jaccard (0.6)",
-            ]}
-          />
-          <SmartScreenshot src={SCREENSHOTS.n8n} label="Capture du dashboard N8N → n8n-dashboard.png" className="flex-1 min-h-[140px]" />
-        </div>
-
-        {/* Right — Scoring */}
-        <div className="flex flex-col gap-4">
-          <MiniCard
-            icon={Bot}
-            title="Scoring IA — 3 axes"
-            accent="#0066CC"
-            items={[
-              "Nouveauté (1-5) — le sujet est-il déjà couvert ?",
-              "Pertinence PayFit (1-5) — correspond à l'ICP ?",
-              "Volume recherche (1-5) — potentiel SEO",
-              "Score ≥ 4/5 → génération auto déclenchée",
-              "Rate limit : 30 scorings / heure / utilisateur",
-            ]}
-          />
-          <SmartScreenshot src={SCREENSHOTS.scoring} label="Capture du scoring → scoring-trends.png" className="flex-1 min-h-[140px]" />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function Slide6() {
-  const passes = [
-    {
-      num: "1",
-      icon: PenTool,
-      title: "Génération",
-      items: ["GPT-4.1, température 0.3", "Template de prompt éditable", "Variables : mot-clé, ICP, secondaires", "Références légales injectées", "Ton PayFit (vouvoiement)"],
-      accent: "#0066CC",
-    },
-    {
-      num: "2",
-      icon: Target,
-      title: "Netlinking IA",
-      items: ["GPT-4o-mini, température 0.1", "Insère 2-4 liens internes", "Contexte : 50 articles existants", "Garde-fou : ratio 80-130%"],
-      accent: "#F59E0B",
-    },
-    {
-      num: "3",
-      icon: CheckCircle,
-      title: "Meta & Publication",
-      items: ["Meta description auto-extraite", "Slug généré automatiquement", "Détection doublons (Jaccard 3 axes)", "Seuil de blocage à 25%"],
-      accent: "#10B981",
-    },
-  ];
-
-  return (
-    <div className="h-full flex flex-col">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <SectionLabel color="text-emerald-600">Demo live</SectionLabel>
-          <SlideTitle>Génération d&apos;article — Pipeline 3 passes</SlideTitle>
-        </div>
-        <div className="flex gap-2">
-          <DemoLink href="/dashboard/generator">Ouvrir le générateur</DemoLink>
-          <DemoLink href="/dashboard/prompts">Voir les prompts</DemoLink>
-        </div>
-      </div>
-
-      <div className="grid md:grid-cols-3 gap-4 mb-4">
-        {passes.map((p) => (
-          <MiniCard key={p.num} icon={p.icon} title={p.title} items={p.items} accent={p.accent} number={`Pass ${p.num}`} />
-        ))}
-      </div>
-
-      <div className="bg-[#0A1E5E] rounded-xl p-4 text-center mb-4">
-        <p className="text-white font-semibold text-sm">
-          <Shield className="w-4 h-4 inline mr-2 text-[#0066CC]" />
-          Zéro hallucination juridique : références vérifiées (Légifrance, URSSAF, EUR-Lex) stockées en base
-        </p>
-      </div>
-
-      <SmartScreenshot src={SCREENSHOTS.generateur} label="Capture du générateur → generateur-articles.png" className="flex-1 min-h-[120px]" />
-    </div>
-  );
-}
-
-function Slide7() {
-  return (
-    <div className="h-full flex flex-col">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <SectionLabel color="text-emerald-600">Demo live</SectionLabel>
-          <SlideTitle>Article publié — SEO complet</SlideTitle>
-        </div>
-        <DemoLink href="/dashboard/articles">Voir les articles</DemoLink>
-      </div>
-
-      <div className="grid md:grid-cols-2 gap-5 mb-5">
-        <MiniCard
-          icon={BarChart3}
-          title="Optimisation on-page"
-          accent="#0066CC"
-          items={[
-            "JSON-LD Article (headline, date, wordCount, author)",
-            "JSON-LD FAQPage — auto-extrait de ## FAQ",
-            "JSON-LD BreadcrumbList (3 niveaux)",
-            "JSON-LD Organization (sameAs LinkedIn & Twitter)",
-            "Canonical + OpenGraph + Twitter Card",
-            "Sitemap dynamique (home 1.0, quiz 0.9, articles 0.8)",
-          ]}
-        />
-        <MiniCard
-          icon={Eye}
-          title="Expérience article"
-          accent="#10B981"
-          items={[
-            "Table des matières sticky (générée depuis H2)",
-            "Blocs interleavés (Trustpilot, carousel, articles liés)",
-            "Articles liés intelligents (scoring 4 signaux)",
-            "Auto-linking au rendu (max 5 liens / article)",
-            "Slug fuzzy correction (Jaccard ≥60%)",
-            "Markdown sécurisé (rendu React custom)",
-          ]}
-        />
-      </div>
-
-      <SmartScreenshot src={SCREENSHOTS.article} label="Capture d'un article publié → article-publie-seo.png" className="flex-1 min-h-[140px]" />
-    </div>
-  );
-}
-
-function Slide8() {
-  return (
-    <div className="h-full flex flex-col">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <SectionLabel color="text-emerald-600">Demo live</SectionLabel>
-          <SlideTitle>Quiz de conformité — Lead magnet</SlideTitle>
-        </div>
-        <div className="flex gap-2">
-          <DemoLink href="/quiz" external>Tester le quiz</DemoLink>
-          <DemoLink href="/dashboard/quiz-analytics">Quiz analytics</DemoLink>
-        </div>
-      </div>
-
-      <div className="grid md:grid-cols-2 gap-5 mb-5">
-        <MiniCard
-          icon={Gamepad2}
-          title="Fonctionnement"
-          accent="#8B5CF6"
-          items={[
-            "12 questions — paie, congés, conformité 2026",
-            "4 variantes thématiques (full, congés, conformité, obligations)",
-            "Zéro inscription — anonyme, sauvegarde Supabase",
-            "Score 0-100 — jauge SVG circulaire animée",
-            "Recommandations personnalisées + CTA PayFit",
-          ]}
-        />
-        <MiniCard
-          icon={DollarSign}
-          title="Lead scoring automatique"
-          accent="#F59E0B"
-          items={[
-            "Lead HOT — score bas = non-conforme = besoin urgent",
-            "Lead WARM — score moyen = optimisation nécessaire",
-            "Lead COLD — score haut = déjà bien équipé",
-            "20 pain points auto-détectés des mauvaises réponses",
-            "Segmentation ICP : TPE (1-9) vs PME (10-50)",
-          ]}
-        />
-      </div>
-
-      <SmartScreenshot src={SCREENSHOTS.quiz} label="Capture du quiz résultats → quiz-resultats.png" className="flex-1 min-h-[140px]" />
-    </div>
-  );
-}
-
-function Slide9() {
-  const competitors = [
-    { name: "Factorial", focus: "Blog RH généraliste • Onboarding", accent: "#EF4444" },
-    { name: "Lucca", focus: "Congés & absences • Outils gestion", accent: "#F59E0B" },
-    { name: "Cegid", focus: "Expert-comptable • Conformité fiscale", accent: "#0066CC" },
-    { name: "Sage", focus: "PME historique • Comptabilité & paie", accent: "#8B5CF6" },
-  ];
-
-  return (
-    <div className="h-full flex flex-col">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <SectionLabel>Avantage compétitif</SectionLabel>
-          <SlideTitle>Veille concurrentielle automatisée</SlideTitle>
-        </div>
-        <div className="flex gap-2">
-          <DemoLink href="/dashboard/veille">Ouvrir la veille</DemoLink>
-          <DemoLink href="/dashboard/benchmark">Benchmark</DemoLink>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
-        {competitors.map((c) => (
-          <div key={c.name} className="bg-white rounded-xl p-4 border border-gray-100 text-center" style={{ borderTopWidth: 3, borderTopColor: c.accent }}>
-            <p className="text-sm font-bold text-gray-900">{c.name}</p>
-            <p className="text-[11px] text-gray-400 mt-1">{c.focus}</p>
-          </div>
-        ))}
-      </div>
-
-      <MiniCard
-        icon={Workflow}
-        title="Monitoring automatique (N8N Workflow 3 — toutes les 12h)"
-        accent="#0066CC"
-        items={[
-          "Scraping RSS blogs — détection nouveaux contenus concurrents",
-          "Analyse IA stratégique — identification stratégie de contenu par concurrent",
-          "Content gaps prioritaires — sujets non couverts par PayFit = opportunités",
-          "Position tracking — classement couleur : vert (top 3), jaune (top 6), rouge (>6)",
-        ]}
-      />
-
-      <SmartScreenshot src={SCREENSHOTS.veille} label="Capture de la veille → veille-concurrentielle.png" className="flex-1 min-h-[110px] mt-4" />
-    </div>
-  );
-}
-
-function Slide10() {
-  const kpis = [
-    { value: "4-8/jour", label: "Articles générés automatiquement", accent: "#0066CC" },
-    { value: "~3h", label: "Économisées par article", accent: "#10B981" },
-    { value: "7$/mois", label: "Coût total infrastructure IA", accent: "#F59E0B" },
-    { value: "20+/sem", label: "Tendances émergentes détectées", accent: "#8B5CF6" },
-  ];
-
-  const scalability = [
-    { icon: Languages, title: "Multi-pays", desc: "Références légales par pays dans Supabase, prompts paramétrables" },
-    { icon: Globe, title: "Multi-langue", desc: "Templates éditables, ton de voix configurable par marché" },
-    { icon: Lock, title: "Sécurité", desc: "RLS Supabase, CSRF, rate limiting, webhook secret, auth middleware" },
-  ];
-
-  return (
-    <div className="h-full flex flex-col">
-      <div className="mb-6">
-        <SectionLabel>Impact</SectionLabel>
-        <SlideTitle>Impact concret pour PayFit</SlideTitle>
-      </div>
-
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        {kpis.map((k) => (
-          <div key={k.value} className="bg-white rounded-2xl p-5 border border-gray-100 text-center" style={{ borderTopWidth: 3, borderTopColor: k.accent }}>
-            <p className="text-2xl md:text-3xl font-bold mb-1" style={{ color: k.accent }}>{k.value}</p>
-            <p className="text-xs text-gray-500">{k.label}</p>
-          </div>
-        ))}
-      </div>
-
-      <div className="bg-white rounded-2xl border border-gray-100 p-6">
-        <h3 className="text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-[#0066CC]" />
-          Scalabilité
-        </h3>
-        <div className="grid md:grid-cols-3 gap-4">
-          {scalability.map((s) => (
-            <div key={s.title} className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-lg bg-[#0066CC]/5 flex items-center justify-center shrink-0">
-                <s.icon className="w-4 h-4 text-[#0066CC]" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-gray-900">{s.title}</p>
-                <p className="text-xs text-gray-500 mt-0.5">{s.desc}</p>
-              </div>
-            </div>
+            </AnimatedSection>
           ))}
         </div>
       </div>
-    </div>
+    </section>
   );
 }
 
-function Slide11() {
-  const bullets = [
-    "URL live déployée sur Vercel + code source disponible",
-    "Documentation technique complète et reproductible",
-    "Workflows N8N exportables et configurables",
+function SolutionSection() {
+  const steps = [
+    { icon: Search, title: "Veille auto", sub: "N8N — cycle 6h", desc: "5 sources en parallele : Legifrance, URSSAF, BOFIP, People Also Ask, blogs concurrents", accent: "#F59E0B" },
+    { icon: Bot, title: "Scoring IA", sub: "GPT-4o-mini", desc: "3 axes : nouveaute, pertinence PayFit, volume recherche. Score >= 4 = auto-generation", accent: "#0066CC" },
+    { icon: PenTool, title: "Generation", sub: "GPT-4.1 — 3 passes", desc: "Article SEO complet + netlinking IA + references legales verifiees + meta auto-extraites", accent: "#10B981" },
+    { icon: Zap, title: "Publication", sub: "SEO-ready", desc: "JSON-LD, sitemap dynamique, canonical, OpenGraph, quiz lead magnet integre", accent: "#8B5CF6" },
   ];
 
   return (
-    <div className="flex flex-col items-center justify-center text-center h-full">
-      <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-2">SEO Copilot</h1>
-      <p className="text-2xl md:text-3xl text-[#0066CC] mb-10">Prêt pour la production.</p>
-
-      <div className="space-y-4 mb-10 text-left max-w-lg mx-auto">
-        {bullets.map((b, i) => (
-          <div key={i} className="flex items-center gap-3">
-            <div className="w-6 h-6 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
-              <CheckCircle className="w-4 h-4 text-emerald-600" />
-            </div>
-            <p className="text-sm text-gray-600">{b}</p>
+    <section className="py-24 px-6" id="solution">
+      <div className="max-w-5xl mx-auto">
+        <AnimatedSection variant="fadeUp">
+          <div className="text-center mb-16">
+            <p className="text-sm font-semibold text-[#0066CC] mb-3 tracking-wide uppercase">Notre solution</p>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Un pipeline SEO entierement automatise
+            </h2>
+            <p className="text-lg text-gray-500 max-w-2xl mx-auto">
+              De la detection d&apos;une tendance a la publication d&apos;un article optimise, en quelques minutes
+            </p>
           </div>
-        ))}
+        </AnimatedSection>
+
+        <div className="grid md:grid-cols-4 gap-6 mb-12">
+          {steps.map((s, i) => (
+            <AnimatedSection key={s.title} variant="fadeUp" delay={i * 100}>
+              <div className="relative">
+                <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-all h-full" style={{ borderTopWidth: 3, borderTopColor: s.accent }}>
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4" style={{ backgroundColor: `${s.accent}12` }}>
+                    <s.icon className="w-6 h-6" style={{ color: s.accent }} />
+                  </div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-xs font-bold text-white px-2 py-0.5 rounded-md" style={{ backgroundColor: s.accent }}>{String(i + 1).padStart(2, "0")}</span>
+                    <h3 className="text-sm font-bold text-gray-900">{s.title}</h3>
+                  </div>
+                  <p className="text-xs text-gray-500 mb-3">{s.desc}</p>
+                  <p className="text-[10px] font-semibold" style={{ color: s.accent }}>{s.sub}</p>
+                </div>
+                {i < 3 && (
+                  <div className="hidden md:flex absolute -right-4 top-1/2 -translate-y-1/2 z-10 w-8 h-8 items-center justify-center">
+                    <ArrowRight className="w-4 h-4 text-gray-300" />
+                  </div>
+                )}
+              </div>
+            </AnimatedSection>
+          ))}
+        </div>
+
+        {/* Key differentiator banner */}
+        <AnimatedSection variant="scaleUp" delay={400}>
+          <div className="bg-gradient-to-r from-[#004C99] to-[#0066CC] rounded-2xl p-6 text-center">
+            <p className="text-white font-bold text-lg mb-1">
+              <Terminal className="w-5 h-5 inline mr-2" />
+              Pas de Lovable &mdash; Un vrai SaaS, construit avec Claude Code
+            </p>
+            <p className="text-white/80 text-sm">
+              Architecture production-ready : Next.js 16 + Supabase + N8N &bull; Cout total IA : ~7$/mois &bull; Reproductible &bull; Scalable
+            </p>
+          </div>
+        </AnimatedSection>
       </div>
+    </section>
+  );
+}
 
-      <div className="w-20 h-0.5 bg-[#0066CC] rounded-full mb-8" />
+function DemoSection() {
+  const demos = [
+    {
+      label: "Veille & Trends",
+      title: "Detection automatique des tendances",
+      desc: "Workflow N8N 6h : Legifrance, URSSAF, BOFIP, People Also Ask, gaps concurrents. Scoring IA 3 axes avec generation auto si score >= 4/5.",
+      screenshot: SCREENSHOTS.scoring,
+      screenshotLabel: "Scoring IA des tendances",
+      link: "/dashboard/trends",
+      linkLabel: "Ouvrir les tendances",
+      accent: "#F59E0B",
+      features: ["5 sources en parallele", "Deduplication Jaccard (0.6)", "Rate limit 30/h/user", "Score >= 4 = auto-gen"],
+    },
+    {
+      label: "Generateur",
+      title: "Pipeline de generation 3 passes",
+      desc: "Pass 1 : contenu GPT-4.1 (t=0.3) avec references legales. Pass 2 : netlinking IA (2-4 liens internes). Pass 3 : meta + slug + detection doublons.",
+      screenshot: SCREENSHOTS.generateur,
+      screenshotLabel: "Generateur d'articles",
+      link: "/dashboard/generator",
+      linkLabel: "Ouvrir le generateur",
+      accent: "#10B981",
+      features: ["Templates editables en BDD", "References legales verifiees", "Netlinking intelligent", "Zero hallucination juridique"],
+    },
+    {
+      label: "Articles SEO",
+      title: "Publication SEO complete",
+      desc: "JSON-LD (Article, FAQ, BreadcrumbList, Organization), table des matieres sticky, auto-linking, articles lies par scoring 4 signaux.",
+      screenshot: SCREENSHOTS.article,
+      screenshotLabel: "Article publie SEO",
+      link: "/dashboard/articles",
+      linkLabel: "Voir les articles",
+      accent: "#0066CC",
+      features: ["4 schemas JSON-LD", "Sitemap dynamique", "Canonical + OpenGraph", "Markdown securise"],
+    },
+    {
+      label: "Quiz Lead Magnet",
+      title: "Quiz de conformite paie 2026",
+      desc: "12 questions, scoring 0-100, lead scoring automatique (HOT/WARM/COLD), 20 pain points auto-detectes, segmentation ICP.",
+      screenshot: SCREENSHOTS.quiz,
+      screenshotLabel: "Quiz resultats",
+      link: "/quiz",
+      linkLabel: "Tester le quiz",
+      accent: "#8B5CF6",
+      features: ["Zero inscription", "Scoring auto HOT/WARM/COLD", "20 pain points detectes", "CTA PayFit personnalises"],
+      external: true,
+    },
+  ];
 
-      <p className="text-xl font-semibold text-gray-900 mb-6">Merci — Questions ?</p>
+  return (
+    <section className="py-24 px-6 bg-gray-50/50" id="demo">
+      <div className="max-w-6xl mx-auto">
+        <AnimatedSection variant="fadeUp">
+          <div className="text-center mb-16">
+            <p className="text-sm font-semibold text-emerald-600 mb-3 tracking-wide uppercase">Demonstration</p>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Chaque brique, en action
+            </h2>
+            <p className="text-lg text-gray-500 max-w-2xl mx-auto">
+              4 modules fonctionnels, accessibles depuis le dashboard
+            </p>
+          </div>
+        </AnimatedSection>
 
-      <div className="flex gap-3">
-        <DemoLink href="/dashboard">Dashboard</DemoLink>
-        <DemoLink href="/quiz" external>Tester le quiz</DemoLink>
+        <div className="space-y-16">
+          {demos.map((demo, i) => (
+            <AnimatedSection key={demo.label} variant="fadeUp" delay={100}>
+              <div className={`grid md:grid-cols-2 gap-8 items-center ${i % 2 === 1 ? "md:direction-rtl" : ""}`}>
+                {/* Text */}
+                <div className={i % 2 === 1 ? "md:order-2" : ""}>
+                  <span className="text-xs font-bold text-white px-3 py-1 rounded-full mb-4 inline-block" style={{ backgroundColor: demo.accent }}>
+                    {demo.label}
+                  </span>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-3">{demo.title}</h3>
+                  <p className="text-sm text-gray-500 mb-6 leading-relaxed">{demo.desc}</p>
+                  <div className="grid grid-cols-2 gap-3 mb-6">
+                    {demo.features.map((f) => (
+                      <div key={f} className="flex items-center gap-2 text-xs text-gray-600">
+                        <CheckCircle className="w-3.5 h-3.5 shrink-0" style={{ color: demo.accent }} />
+                        {f}
+                      </div>
+                    ))}
+                  </div>
+                  {demo.external ? (
+                    <a href={demo.link} target="_blank" rel="noopener noreferrer">
+                      <Button size="sm" className="rounded-xl cursor-pointer gap-2" style={{ backgroundColor: demo.accent }}>
+                        {demo.linkLabel}
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </Button>
+                    </a>
+                  ) : (
+                    <Link href={demo.link}>
+                      <Button size="sm" className="rounded-xl cursor-pointer gap-2" style={{ backgroundColor: demo.accent }}>
+                        {demo.linkLabel}
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </Button>
+                    </Link>
+                  )}
+                </div>
+                {/* Screenshot */}
+                <div className={i % 2 === 1 ? "md:order-1" : ""}>
+                  <SmartScreenshot
+                    src={demo.screenshot}
+                    label={demo.screenshotLabel}
+                    className="h-[300px] md:h-[350px]"
+                  />
+                </div>
+              </div>
+            </AnimatedSection>
+          ))}
+        </div>
+
+        {/* Veille concurrentielle - bonus */}
+        <AnimatedSection variant="fadeUp" delay={200}>
+          <div className="mt-16 bg-white rounded-2xl p-8 border border-gray-100 shadow-sm">
+            <div className="grid md:grid-cols-2 gap-8 items-center">
+              <div>
+                <span className="text-xs font-bold text-white px-3 py-1 rounded-full mb-4 inline-block bg-[#EF4444]">
+                  Veille concurrentielle
+                </span>
+                <h3 className="text-2xl font-bold text-gray-900 mb-3">Monitoring automatique des concurrents</h3>
+                <p className="text-sm text-gray-500 mb-4 leading-relaxed">
+                  Workflow N8N toutes les 12h : scraping RSS blogs concurrents, analyse IA de leur strategie, detection des content gaps = opportunites pour PayFit.
+                </p>
+                <div className="grid grid-cols-2 gap-2 mb-4">
+                  {["Factorial", "Lucca", "Cegid", "Sage"].map((c) => (
+                    <div key={c} className="bg-gray-50 rounded-lg px-3 py-2 text-center">
+                      <p className="text-sm font-semibold text-gray-700">{c}</p>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex gap-2">
+                  <Link href="/dashboard/veille">
+                    <Button size="sm" className="bg-[#EF4444] hover:bg-[#DC2626] rounded-xl cursor-pointer gap-2">
+                      Ouvrir la veille
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </Button>
+                  </Link>
+                  <Link href="/dashboard/benchmark">
+                    <Button size="sm" variant="outline" className="rounded-xl cursor-pointer gap-2 border-[#EF4444]/30 text-[#EF4444]">
+                      Benchmark
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+              <SmartScreenshot
+                src={SCREENSHOTS.veille}
+                label="Veille concurrentielle"
+                className="h-[280px]"
+              />
+            </div>
+          </div>
+        </AnimatedSection>
       </div>
-    </div>
+    </section>
+  );
+}
+
+function ImpactSection() {
+  return (
+    <section className="py-24 px-6" id="impact">
+      <div className="max-w-5xl mx-auto">
+        <AnimatedSection variant="fadeUp">
+          <div className="text-center mb-16">
+            <p className="text-sm font-semibold text-[#0066CC] mb-3 tracking-wide uppercase">Impact business</p>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Des resultats concrets pour PayFit
+            </h2>
+          </div>
+        </AnimatedSection>
+
+        {/* Big KPI cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12">
+          {[
+            { icon: FileText, value: 8, suffix: " articles/jour", label: "Generes automatiquement", accent: "#0066CC" },
+            { icon: Clock, value: 3, suffix: "h economisees", prefix: "~", label: "Par article (vs manuel)", accent: "#10B981" },
+            { icon: DollarSign, value: 7, suffix: "$/mois", prefix: "~", label: "Cout total infrastructure IA", accent: "#F59E0B" },
+            { icon: TrendingUp, value: 20, suffix: "+ tendances/sem", label: "Detectees automatiquement", accent: "#8B5CF6" },
+          ].map((kpi, i) => (
+            <AnimatedSection key={kpi.label} variant="scaleUp" delay={i * 100}>
+              <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm text-center" style={{ borderTopWidth: 3, borderTopColor: kpi.accent }}>
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center mx-auto mb-3" style={{ backgroundColor: `${kpi.accent}12` }}>
+                  <kpi.icon className="w-5 h-5" style={{ color: kpi.accent }} />
+                </div>
+                <p className="text-3xl md:text-4xl font-extrabold mb-1" style={{ color: kpi.accent }}>
+                  <CountUp end={kpi.value} prefix={kpi.prefix} suffix={kpi.suffix} />
+                </p>
+                <p className="text-xs text-gray-500">{kpi.label}</p>
+              </div>
+            </AnimatedSection>
+          ))}
+        </div>
+
+        {/* Scalability */}
+        <AnimatedSection variant="fadeUp" delay={200}>
+          <div className="bg-white rounded-2xl border border-gray-100 p-8 shadow-sm">
+            <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-[#0066CC]" />
+              Scalabilite & Securite
+            </h3>
+            <div className="grid md:grid-cols-3 gap-6">
+              {[
+                { icon: Languages, title: "Multi-pays", desc: "References legales par pays dans Supabase. Prompts parametrables par marche." },
+                { icon: Globe, title: "Multi-langue", desc: "Templates editables, ton de voix configurable. Deployable pour UK, Espagne, Allemagne." },
+                { icon: Lock, title: "Securite production", desc: "RLS Supabase, CSRF, rate limiting, webhook secret, auth middleware SSR." },
+              ].map((s) => (
+                <div key={s.title} className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-[#0066CC]/5 flex items-center justify-center shrink-0">
+                    <s.icon className="w-5 h-5 text-[#0066CC]" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-gray-900 mb-1">{s.title}</p>
+                    <p className="text-xs text-gray-500 leading-relaxed">{s.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </AnimatedSection>
+      </div>
+    </section>
+  );
+}
+
+function StackSection() {
+  const techs = [
+    { icon: Blocks, name: "Next.js 16", desc: "App Router, SSR, React 19", accent: "#0066CC" },
+    { icon: Database, name: "Supabase", desc: "PostgreSQL, Auth SSR, RLS", accent: "#10B981" },
+    { icon: Bot, name: "OpenAI", desc: "GPT-4.1 + GPT-4o-mini", accent: "#F59E0B" },
+    { icon: Workflow, name: "N8N Cloud", desc: "3 workflows automatises", accent: "#8B5CF6" },
+    { icon: Terminal, name: "Claude Code", desc: "SaaS construit de A a Z", accent: "#EF4444" },
+    { icon: Globe, name: "Vercel", desc: "Deploy continu, edge", accent: "#000000" },
+  ];
+
+  return (
+    <section className="py-24 px-6 bg-gray-50/50" id="stack">
+      <div className="max-w-5xl mx-auto">
+        <AnimatedSection variant="fadeUp">
+          <div className="text-center mb-16">
+            <p className="text-sm font-semibold text-[#8B5CF6] mb-3 tracking-wide uppercase">Stack technique</p>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Architecture & parti pris
+            </h2>
+            <p className="text-lg text-gray-500 max-w-2xl mx-auto">
+              Un SaaS production-ready, pas un prototype Lovable
+            </p>
+          </div>
+        </AnimatedSection>
+
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+          {techs.map((t, i) => (
+            <AnimatedSection key={t.name} variant="scaleUp" delay={i * 80}>
+              <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition-all text-center" style={{ borderTopWidth: 3, borderTopColor: t.accent }}>
+                <div className="w-11 h-11 rounded-xl flex items-center justify-center mx-auto mb-3" style={{ backgroundColor: `${t.accent}12` }}>
+                  <t.icon className="w-5 h-5" style={{ color: t.accent }} />
+                </div>
+                <p className="text-sm font-bold text-gray-900">{t.name}</p>
+                <p className="text-xs text-gray-400 mt-1">{t.desc}</p>
+              </div>
+            </AnimatedSection>
+          ))}
+        </div>
+
+        <AnimatedSection variant="fadeUp" delay={300}>
+          <div className="bg-[#0A1E5E] rounded-2xl p-6 text-center">
+            <p className="text-white font-bold text-sm mb-2">
+              <Shield className="w-4 h-4 inline mr-2 text-[#0066CC]" />
+              Zero hallucination juridique
+            </p>
+            <p className="text-white/70 text-xs">
+              References legales verifiees (Legifrance, URSSAF, EUR-Lex) stockees en base avant injection. Templates de prompt editables sans code.
+            </p>
+          </div>
+        </AnimatedSection>
+      </div>
+    </section>
+  );
+}
+
+function DeliverablesSection() {
+  const deliverables = [
+    {
+      icon: Globe,
+      title: "Solution finalisee",
+      desc: "URL live deployee sur Vercel, dashboard complet, quiz fonctionnel",
+      status: "Live",
+      statusColor: "#10B981",
+    },
+    {
+      icon: Terminal,
+      title: "SaaS construit avec Claude Code",
+      desc: "Pas de Lovable : un vrai SaaS Next.js de A a Z, code source disponible",
+      status: "Production",
+      statusColor: "#0066CC",
+    },
+    {
+      icon: Workflow,
+      title: "Workflows N8N exportables",
+      desc: "3 workflows : veille 6h, generation auto, monitoring concurrents 12h",
+      status: "Configurable",
+      statusColor: "#F59E0B",
+    },
+    {
+      icon: Play,
+      title: "Demo video",
+      desc: "Video de demonstration 3-5 min du pipeline complet",
+      status: "Pret",
+      statusColor: "#8B5CF6",
+    },
+    {
+      icon: BookOpen,
+      title: "Documentation technique",
+      desc: "Comment reutiliser et dupliquer la solution pour d'autres marches",
+      status: "Inclus",
+      statusColor: "#EF4444",
+    },
+  ];
+
+  return (
+    <section className="py-24 px-6" id="livrables">
+      <div className="max-w-5xl mx-auto">
+        <AnimatedSection variant="fadeUp">
+          <div className="text-center mb-16">
+            <p className="text-sm font-semibold text-emerald-600 mb-3 tracking-wide uppercase">Livrables</p>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Tout est pret
+            </h2>
+            <p className="text-lg text-gray-500 max-w-2xl mx-auto">
+              Chaque livrable attendu est couvert et fonctionnel
+            </p>
+          </div>
+        </AnimatedSection>
+
+        <div className="space-y-4">
+          {deliverables.map((d, i) => (
+            <AnimatedSection key={d.title} variant="fadeUp" delay={i * 100}>
+              <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm flex items-center gap-5 hover:shadow-md transition-all">
+                <div className="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center shrink-0">
+                  <d.icon className="w-6 h-6 text-gray-600" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-base font-bold text-gray-900">{d.title}</h3>
+                  <p className="text-sm text-gray-500">{d.desc}</p>
+                </div>
+                <span className="text-xs font-bold px-3 py-1 rounded-full shrink-0" style={{ color: d.statusColor, backgroundColor: `${d.statusColor}12` }}>
+                  {d.status}
+                </span>
+              </div>
+            </AnimatedSection>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function SynthesisSection() {
+  return (
+    <section className="py-24 px-6 bg-gray-50/50" id="synthese">
+      <div className="max-w-5xl mx-auto">
+        <AnimatedSection variant="fadeUp">
+          <div className="text-center mb-12">
+            <p className="text-sm font-semibold text-[#0066CC] mb-3 tracking-wide uppercase">Slide de synthese</p>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
+              Resume pour le jury
+            </h2>
+          </div>
+        </AnimatedSection>
+
+        <AnimatedSection variant="scaleUp" delay={100}>
+          <div className="bg-white rounded-3xl border border-gray-200 shadow-lg overflow-hidden">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-[#004C99] to-[#0066CC] p-8 text-white">
+              <div className="flex items-center justify-between mb-4">
+                <div className="inline-flex items-center gap-2 bg-white/15 px-4 py-1.5 rounded-full text-sm font-medium">
+                  <Shield className="w-4 h-4" />
+                  Hackathon PayFit 2026
+                </div>
+              </div>
+              <h3 className="text-3xl font-extrabold mb-2">SEO Copilot for PayFit</h3>
+              <p className="text-white/80 text-lg">Pipeline IA automatise : de la tendance au contenu publie</p>
+            </div>
+
+            {/* Body */}
+            <div className="p-8">
+              <div className="grid md:grid-cols-3 gap-8 mb-8">
+                {/* Probleme */}
+                <div>
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-8 h-8 rounded-lg bg-[#EF4444]/10 flex items-center justify-center">
+                      <Target className="w-4 h-4 text-[#EF4444]" />
+                    </div>
+                    <h4 className="text-sm font-bold text-gray-900 uppercase tracking-wide">Probleme cible</h4>
+                  </div>
+                  <p className="text-sm text-gray-600 leading-relaxed">
+                    PayFit doit produire du contenu SEO expert en volume, detecter les tendances avant la concurrence, et deployer des outils interactifs sans dependre des devs.
+                  </p>
+                </div>
+
+                {/* Solution */}
+                <div>
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-8 h-8 rounded-lg bg-[#0066CC]/10 flex items-center justify-center">
+                      <Zap className="w-4 h-4 text-[#0066CC]" />
+                    </div>
+                    <h4 className="text-sm font-bold text-gray-900 uppercase tracking-wide">Solution</h4>
+                  </div>
+                  <p className="text-sm text-gray-600 leading-relaxed">
+                    Un SaaS complet construit avec Claude Code : veille auto N8N, scoring IA, generation 3 passes, publication SEO-ready, quiz lead magnet.
+                  </p>
+                </div>
+
+                {/* Impact */}
+                <div>
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-8 h-8 rounded-lg bg-[#10B981]/10 flex items-center justify-center">
+                      <BarChart3 className="w-4 h-4 text-[#10B981]" />
+                    </div>
+                    <h4 className="text-sm font-bold text-gray-900 uppercase tracking-wide">Impact business</h4>
+                  </div>
+                  <ul className="text-sm text-gray-600 space-y-1.5">
+                    <li className="flex items-center gap-2">
+                      <CheckCircle className="w-3.5 h-3.5 text-[#10B981] shrink-0" />
+                      4-8 articles/jour generes
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle className="w-3.5 h-3.5 text-[#10B981] shrink-0" />
+                      ~3h economisees par article
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle className="w-3.5 h-3.5 text-[#10B981] shrink-0" />
+                      20+ mots-cles couverts / semaine
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle className="w-3.5 h-3.5 text-[#10B981] shrink-0" />
+                      ~7$/mois de cout IA total
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              {/* Tech bar */}
+              <div className="bg-gray-50 rounded-xl p-4 flex flex-wrap items-center justify-center gap-4 text-xs font-semibold text-gray-500">
+                <span className="text-[#0066CC]">Next.js 16</span>
+                <span className="text-gray-300">|</span>
+                <span className="text-[#10B981]">Supabase</span>
+                <span className="text-gray-300">|</span>
+                <span className="text-[#F59E0B]">OpenAI GPT-4.1</span>
+                <span className="text-gray-300">|</span>
+                <span className="text-[#8B5CF6]">N8N</span>
+                <span className="text-gray-300">|</span>
+                <span className="text-[#EF4444]">Claude Code</span>
+                <span className="text-gray-300">|</span>
+                <span className="text-gray-700">Vercel</span>
+              </div>
+            </div>
+          </div>
+        </AnimatedSection>
+      </div>
+    </section>
+  );
+}
+
+function CTASection() {
+  return (
+    <section className="py-24 px-6" id="cta">
+      <div className="max-w-4xl mx-auto text-center">
+        <AnimatedSection variant="fadeUp">
+          <h2 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-4">
+            SEO Copilot
+          </h2>
+          <p className="text-2xl md:text-3xl font-bold text-[#0066CC] mb-8">
+            Pret pour la production.
+          </p>
+        </AnimatedSection>
+
+        <AnimatedSection variant="fadeUp" delay={100}>
+          <div className="space-y-4 mb-12 text-left max-w-lg mx-auto">
+            {[
+              "URL live deployee sur Vercel + code source disponible",
+              "SaaS complet construit avec Claude Code, pas Lovable",
+              "Documentation technique complete et reproductible",
+              "Workflows N8N exportables et configurables",
+              "Scalable a l'international (multi-pays, multi-langue)",
+            ].map((b, i) => (
+              <div key={i} className="flex items-center gap-3">
+                <div className="w-6 h-6 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
+                  <CheckCircle className="w-4 h-4 text-emerald-600" />
+                </div>
+                <p className="text-sm text-gray-600">{b}</p>
+              </div>
+            ))}
+          </div>
+        </AnimatedSection>
+
+        <AnimatedSection variant="scaleUp" delay={200}>
+          <div className="flex flex-wrap justify-center gap-4 mb-12">
+            <Link href="/dashboard">
+              <Button size="lg" className="bg-[#0066CC] hover:bg-[#004C99] text-white rounded-xl cta-glow cursor-pointer gap-2 text-base px-8 h-12">
+                Explorer le dashboard
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+            </Link>
+            <a href="/quiz" target="_blank" rel="noopener noreferrer">
+              <Button size="lg" variant="outline" className="rounded-xl cursor-pointer gap-2 text-base px-8 h-12 border-[#0066CC]/30 text-[#0066CC] hover:bg-[#0066CC]/5">
+                Tester le quiz
+                <ExternalLink className="w-4 h-4" />
+              </Button>
+            </a>
+          </div>
+        </AnimatedSection>
+
+        <AnimatedSection variant="fadeIn" delay={300}>
+          <div className="w-20 h-0.5 bg-[#0066CC] rounded-full mx-auto mb-8" />
+          <p className="text-2xl font-bold text-gray-900 mb-2">Merci &mdash; Questions ?</p>
+          <p className="text-sm text-gray-400">Hackathon PayFit x Eugenia School x Paatch &mdash; 2026</p>
+        </AnimatedSection>
+      </div>
+    </section>
   );
 }
 
 /* ================================================================
-   SLIDE DECK CONTAINER
+   PAGE
    ================================================================ */
 
-const SLIDES = [
-  { component: Slide1, label: "Titre" },
-  { component: Slide2, label: "Le constat" },
-  { component: Slide3, label: "Pipeline" },
-  { component: Slide4, label: "Stack" },
-  { component: Slide5, label: "Veille & Trends" },
-  { component: Slide6, label: "Génération" },
-  { component: Slide7, label: "Article SEO" },
-  { component: Slide8, label: "Quiz" },
-  { component: Slide9, label: "Concurrence" },
-  { component: Slide10, label: "Impact" },
-  { component: Slide11, label: "Closing" },
-];
-
 export default function PresentationPage() {
-  const [current, setCurrent] = useState(0);
-  const total = SLIDES.length;
-
-  const prev = useCallback(() => setCurrent((c) => Math.max(0, c - 1)), []);
-  const next = useCallback(() => setCurrent((c) => Math.min(total - 1, c + 1)), [total]);
-
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "ArrowLeft") { e.preventDefault(); prev(); }
-      if (e.key === "ArrowRight") { e.preventDefault(); next(); }
-    }
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [prev, next]);
-
-  const CurrentSlide = SLIDES[current].component;
-
   return (
-    <div className="flex flex-col min-h-[calc(100vh-5rem)]">
-      {/* ── Slide content ── */}
-      <div className="flex-1 max-w-6xl w-full mx-auto py-6">
-        <CurrentSlide />
-      </div>
-
-      {/* ── Navigation bar ── */}
-      <div className="sticky bottom-0 bg-white/80 backdrop-blur-md border-t border-gray-200 py-3 px-6 z-20">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
-          {/* Prev */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={prev}
-            disabled={current === 0}
-            className="rounded-xl cursor-pointer gap-1.5 disabled:opacity-30"
-          >
-            <ChevronLeft className="w-4 h-4" />
-            <span className="hidden sm:inline">Précédent</span>
-          </Button>
-
-          {/* Center: dots + label */}
-          <div className="flex flex-col items-center gap-1.5">
-            <div className="flex items-center gap-1.5">
-              {SLIDES.map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setCurrent(i)}
-                  className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${
-                    i === current ? "w-6 bg-[#0066CC]" : "w-2 bg-gray-300 hover:bg-gray-400"
-                  }`}
-                />
-              ))}
-            </div>
-            <p className="text-xs text-gray-500">
-              <span className="font-semibold text-[#0066CC]">{current + 1}</span>
-              <span className="mx-1">/</span>
-              <span>{total}</span>
-              <span className="mx-2 text-gray-300">|</span>
-              <span>{SLIDES[current].label}</span>
-            </p>
-          </div>
-
-          {/* Next */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={next}
-            disabled={current === total - 1}
-            className="rounded-xl cursor-pointer gap-1.5 disabled:opacity-30"
-          >
-            <span className="hidden sm:inline">Suivant</span>
-            <ChevronRight className="w-4 h-4" />
-          </Button>
-        </div>
-      </div>
+    <div className="bg-white -m-6 -mt-4">
+      <HeroSection />
+      <ProblemSection />
+      <SolutionSection />
+      <DemoSection />
+      <ImpactSection />
+      <StackSection />
+      <SynthesisSection />
+      <DeliverablesSection />
+      <CTASection />
     </div>
   );
 }
