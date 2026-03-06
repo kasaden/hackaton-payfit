@@ -288,11 +288,8 @@ function Solution() {
           <div className="bg-white/5 backdrop-blur border border-white/10 rounded-2xl p-6 text-center">
             <p className="text-lg font-bold text-white flex items-center justify-center gap-3">
               <Terminal className="w-5 h-5 text-[#0066CC]" />
-              Construit de A a Z avec Claude Code
+              Construit en grande partie avec Claude Code
               <span className="text-white/30">|</span>
-              <span className="text-white/50 font-normal text-base">
-                Pas de Lovable, un vrai SaaS
-              </span>
             </p>
           </div>
         </AnimatedSection>
