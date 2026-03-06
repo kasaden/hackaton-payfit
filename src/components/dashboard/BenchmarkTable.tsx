@@ -80,9 +80,9 @@ export function BenchmarkTable({ benchmarks }: BenchmarkTableProps) {
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-xs text-[#0066CC] hover:underline truncate block max-w-[240px]"
-                    title={b.url}
+                    title={b.url || ''}
                   >
-                    {b.url.length > 50 ? b.url.slice(0, 50) + "..." : b.url}
+                    {b.url ? (b.url.length > 50 ? b.url.slice(0, 50) + "..." : b.url) : '—'}
                   </a>
                 </TableCell>
                 <TableCell className="text-xs text-gray-500 max-w-xs">
